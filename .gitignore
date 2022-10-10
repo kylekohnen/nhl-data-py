@@ -1,0 +1,16 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Testing / Coverage
+.coverage
+.coverage.*
+.pytest_cache/
+
+# IDE / Text Editors
+.vscode/*
+.idea/*
