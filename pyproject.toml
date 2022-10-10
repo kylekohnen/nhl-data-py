@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "nhl-data-py"
+version = "0.1.0"
+description = ""
+authors = ["Kyle Kohnen <github@kylekohnen.com>"]
+readme = "README.md"
+packages = [{include = "nhl_data_py"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
