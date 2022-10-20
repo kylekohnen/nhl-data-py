@@ -1,0 +1,44 @@
+name: Checks
+
+on:
+  pull_request:
+
+jobs:
+  black:
+    runs-on: ubuntu-latest
+    name: black Format
+    steps:
+      - name: Check out source repository
+        uses: actions/checkout@v3
+      - name: black Format
+        uses: psf/black@stable
+
+  flake8-lint:
+    runs-on: ubuntu-latest
+    name: flake8 Lint
+    steps:
+      - name: Check out source repository
+        uses: actions/checkout@v3
+      - name: Set up Python environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - run: curl -sSL https://install.python-poetry.org | python3 - --version 1.2.1
+      - run: poetry install -vv --only dev
+      - name: Run flake8
+        run: poetry run flake8
+
+  pytest:
+    runs-on: ubuntu-latest
+    name: Tests
+    steps:
+      - name: Check out source repository
+        uses: actions/checkout@v3
+      - name: Set up Python environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - run: curl -sSL https://install.python-poetry.org | python3 - --version 1.2.1
+      - run: poetry install -vv
+      - name: Run pytest
+        run: poetry run pytest
