@@ -1,4 +1,6 @@
-from requests import request, Response
+from requests import request
+
+from nhl_data_py.nhl_api.response import Response
 
 
 class NhlApi:
@@ -21,7 +23,7 @@ class NhlApi:
         """
         url = f"{self.url}/{endpoint}"
         data = request(http_method, url, timeout=60)
-        return data
+        return Response.from_requests(data)
 
     def get(self, endpoint: str) -> Response:
         """

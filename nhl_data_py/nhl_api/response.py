@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from requests import Response as RequestResponse
+
 
 class Response:
     """
@@ -11,3 +13,15 @@ class Response:
     def __init__(self, status_code: int, data: dict):
         self.status_code = status_code
         self.data = data
+
+    @classmethod
+    def from_requests(cls, response: RequestResponse) -> Response:
+        """
+        Utility method to create a response object from the `requests` Response
+        object.
+
+        :param response: the response object from the `requests` package
+        :return: NHL API Response Object
+        """
+        assert isinstance(response, RequestResponse), f"{response} not of proper type."
+        return cls(response.status_code, response.json())
