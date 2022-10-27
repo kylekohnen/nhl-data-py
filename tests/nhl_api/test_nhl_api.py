@@ -1,3 +1,6 @@
+"""
+Tests the `nhl_data_py.nhl_api.nhl_api` module.
+"""
 import pytest
 import responses
 
@@ -13,12 +16,20 @@ class TestNhlApi:
 
     @responses.activate
     def test_get_200(self):
+        """
+        Tests `NhlApi.get` method on an endpoint that would return data with
+        code 200.
+        """
         responses.get(f"{BASE_URL}/random-endpoint", status=200, json={"test": "NHL"})
-        r = NhlApi().get("random-endpoint")
-        assert r.status_code == 200 and r.data == {"test": "NHL"}
+        resp = NhlApi().get("random-endpoint")
+        assert resp.status_code == 200 and resp.data == {"test": "NHL"}
 
     @responses.activate
     def test_get_404_no_json(self):
+        """
+        Tests `NhlApi.get` method on an endpoint that would return no data with
+        code 404
+        """
         responses.get(f"{BASE_URL}/random-endpoint", status=404)
         with pytest.raises(Exception):
             NhlApi().get("random-endpoint")

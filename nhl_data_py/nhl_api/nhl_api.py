@@ -1,3 +1,6 @@
+"""
+NHL API client.
+"""
 from requests import request
 
 from nhl_data_py.nhl_api.response import Response

@@ -1,3 +1,6 @@
+"""
+Represents a simple Response received from the NHL API.
+"""
 from __future__ import annotations
 
 from requests import Response as RequestResponse
