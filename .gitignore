@@ -12,5 +12,5 @@ __pycache__/
 .pytest_cache/
 
 # IDE / Text Editors
-.vscode/*
-.idea/*
+.vscode/
+.idea/
