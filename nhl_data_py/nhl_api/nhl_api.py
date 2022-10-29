@@ -1,4 +1,5 @@
 from requests import request, Response
+import error_exceptions     # Custom exceptions for this API
 
 
 class NhlApi:
