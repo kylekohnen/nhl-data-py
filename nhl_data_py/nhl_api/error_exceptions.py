@@ -1,14 +1,13 @@
-# Error codes: https://www.w3.org/Protocols/HTTP/HTRESP.html
 # Custom exceptions: https://www.programiz.com/python-programming/user-defined-exception
 
 class APIException(Exception):
+    """Raise for 4xx and 5xx HTTP status codes."""
     pass
 
-class NullDatabase(APIException):
-    """Raise when user requests a database that does not exist [404 error]"""
+class ClientError(APIException):
+    """Raise for 4xx HTTP status codes."""
     pass
 
-class APIError(APIException):
-    """Raise for error code 500"""
+class ServerError(APIException):
+    """Raise for 5xx HTTP status codes."""
     pass
-
