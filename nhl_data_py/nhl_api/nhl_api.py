@@ -1,5 +1,5 @@
 from requests import request, Response
-import error_exceptions     # Custom exceptions for this API
+import error_exceptions
 
 
 class NhlApi:
@@ -24,7 +24,6 @@ class NhlApi:
         data = request(http_method, url, timeout=60)
         if (data.status_code//100 == 4):
             raise error_exceptions.ClientError( 
-                #"HTTP status code: {}".format(data.status_code)
                 f"HTTP status code: {data.status_code}"
             )
         elif (data.status_code//100 == 5):

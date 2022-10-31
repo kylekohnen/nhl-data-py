@@ -1,5 +1,3 @@
-# Custom exceptions: https://www.programiz.com/python-programming/user-defined-exception
-
 class APIException(Exception):
     """Raise for 4xx and 5xx HTTP status codes."""
     pass
