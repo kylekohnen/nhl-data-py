@@ -1,6 +1,9 @@
-from requests import request, Response
+"""
+NHL API client.
+"""
+from requests import request
+from nhl_data_py.nhl_api.response import Response
 import error_exceptions
-
 
 class NhlApi:
     """
@@ -22,6 +25,7 @@ class NhlApi:
         """
         url = f"{self.url}/{endpoint}"
         data = request(http_method, url, timeout=60)
+
         if (data.status_code//100 == 4):
             raise error_exceptions.ClientError( 
                 f"HTTP status code: {data.status_code}"
@@ -31,7 +35,7 @@ class NhlApi:
                 f"HTTP status code: {data.status_code}"
             )
         else:
-            return data
+            return Response.from_requests(data)
 
     def get(self, endpoint: str) -> Response:
         """
