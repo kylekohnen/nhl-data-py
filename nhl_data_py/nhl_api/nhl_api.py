@@ -4,6 +4,9 @@ NHL API client.
 from requests import request
 from nhl_data_py.nhl_api.response import Response
 from nhl_data_py.nhl_api.error_exceptions import ResponseError
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class NhlApi:
@@ -25,6 +28,7 @@ class NhlApi:
         :return: the data / response returned by the API
         """
         url = f"{self.url}/{endpoint}"
+        logger.debug(f"{http_method} request sent to: {url}")
         data = request(http_method, url, timeout=60)
 
         if data.status_code // 100 in [4, 5]:
