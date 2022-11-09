@@ -1,5 +1,5 @@
 """
-Tests the `nhl_data_py.nhl_api.nhl_api` module.
+Tests the `nhl_api.core.nhl_api` module.
 """
 import pytest
 import responses
