@@ -5,9 +5,9 @@ import logging
 
 from requests import request
 
-from nhl_data_py.nhl_api.decorators import timing
-from nhl_data_py.nhl_api.error_exceptions import ResponseError
-from nhl_data_py.nhl_api.response import Response
+from nhl_api.core.decorators import timing
+from nhl_api.core.error_exceptions import ResponseError
+from nhl_api.core.response import Response
 
 logger = logging.getLogger(__name__)
 
