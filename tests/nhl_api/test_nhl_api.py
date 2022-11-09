@@ -32,5 +32,6 @@ class TestNhlApi:
         code 404
         """
         responses.get(f"{BASE_URL}/random-endpoint", status=404)
-        with pytest.raises(ResponseError):
+        with pytest.raises(ResponseError) as error:
             NhlApi().get("random-endpoint")
+        
