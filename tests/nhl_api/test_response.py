@@ -1,11 +1,11 @@
 """
-Tests the `nhl_data_py.nhl_api.response` module.
+Tests the `nhl_api.core.response` module.
 """
 import pytest
 import requests
 import responses
 
-from nhl_data_py.nhl_api.response import Response
+from nhl_api.core.response import Response
 
 
 class TestResponse:

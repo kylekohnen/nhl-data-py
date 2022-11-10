@@ -1,9 +1,15 @@
 """
 NHL API client.
 """
+import logging
+
 from requests import request
-from nhl_data_py.nhl_api.response import Response
-from nhl_data_py.nhl_api.error_exceptions import ResponseError
+
+from nhl_api.core.decorators import timing
+from nhl_api.core.error_exceptions import ResponseError
+from nhl_api.core.response import Response
+
+logger = logging.getLogger(__name__)
 
 
 class NhlApi:
@@ -16,6 +22,7 @@ class NhlApi:
     def __init__(self, api_version: int = 1):
         self.url: str = f"{NhlApi._base_url}/v{api_version}"
 
+    @timing
     def _request(self, http_method: str, endpoint: str) -> Response:
         """
         Sends an HTTP request to the NHL API.
@@ -25,6 +32,7 @@ class NhlApi:
         :return: the data / response returned by the API
         """
         url = f"{self.url}/{endpoint}"
+        logger.debug(f"{http_method} request sent to: {url}")
         data = request(http_method, url, timeout=60)
 
         if data.status_code // 100 in [4, 5]:

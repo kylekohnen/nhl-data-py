@@ -1,11 +1,10 @@
 """
-Tests the `nhl_data_py.nhl_api.nhl_api` module.
+Tests the `nhl_api.core.nhl_api` module.
 """
 import pytest
 import responses
 
-from nhl_data_py.nhl_api.nhl_api import NhlApi
-from nhl_data_py.nhl_api.nhl_api import ResponseError
+from nhl_api.core.nhl_api import NhlApi, ResponseError
 
 BASE_URL = "https://statsapi.web.nhl.com/api/v1"
 
