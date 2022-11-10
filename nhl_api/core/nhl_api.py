@@ -51,3 +51,14 @@ class NhlApi:
         :return: the data / response returned by the API
         """
         return self._request("GET", endpoint)
+
+    def teams(self) -> Response:
+        """
+        Sends a GET request to retrieve team data from the NHL API.
+        If no additional parameters are passed in, then all
+        data on the present NHL teams will be returned.
+
+        :return: data on all NHL teams
+        """
+        teams_endpoint = "teams"
+        return self.get(teams_endpoint)
