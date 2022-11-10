@@ -3,6 +3,7 @@ Represents a simple Response received from the NHL API.
 """
 from __future__ import annotations
 
+from requests import JSONDecodeError
 from requests import Response as RequestResponse
 
 
@@ -27,4 +28,8 @@ class Response:
         :return: NHL API Response Object
         """
         assert isinstance(response, RequestResponse), f"{response} not of proper type."
-        return cls(response.status_code, response.json())
+        try:
+            json = response.json()
+        except JSONDecodeError:
+            json = {}
+        return cls(response.status_code, json)
