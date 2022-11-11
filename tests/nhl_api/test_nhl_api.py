@@ -1,6 +1,8 @@
 """
 Tests the `nhl_api.core.nhl_api` module.
 """
+from contextlib import nullcontext
+
 import pytest
 import responses
 
@@ -53,17 +55,44 @@ class TestNhlApi:
             assert error.match(f"GET method returns HTTP status code {expected_status}")
 
     @responses.activate
-    @pytest.mark.parametrize("expected_status", [200, 300, 400, 500])
-    def test_teams_default_behaviour(self, expected_status):
+    @pytest.mark.parametrize(
+        "status, error_raise",
+        [
+            (200, nullcontext()),
+            (300, nullcontext()),
+            (400, pytest.raises(ResponseError)),
+            (500, pytest.raises(ResponseError)),
+        ],
+    )
+    def test_teams_default_behaviour(self, status, error_raise):
         """
         Tests the `NhlApi.teams` method's default behaviour.
         """
-        responses.get(
-            f"{TestNhlApi.BASE_URL}/teams", status=expected_status, json={"teams": {}}
-        )
-        if expected_status < 400:
+        responses.get(f"{TestNhlApi.BASE_URL}/teams", status=status, json={"teams": {}})
+        with error_raise:
             resp = NhlApi().teams()
-            assert resp.status_code == expected_status and resp.data == {"teams": {}}
-        else:
-            with pytest.raises(ResponseError):
-                NhlApi().teams()
+            assert resp.status_code == status and resp.data == {"teams": {}}
+
+    @responses.activate
+    @pytest.mark.parametrize(
+        "status, error_raise",
+        [
+            (200, nullcontext()),
+            (300, nullcontext()),
+            (400, pytest.raises(ResponseError)),
+            (500, pytest.raises(ResponseError)),
+        ],
+        ids=["status=200", "status=300", "status=400", "status=500"],
+    )
+    @pytest.mark.parametrize("team_ids", [1, [1, 2, 3]], ids=["id=1", "id=[1,2,3]"])
+    def test_teams_specified_team_id(self, status, error_raise, team_ids):
+        responses.get(
+            f"{TestNhlApi.BASE_URL}/teams",
+            status=status,
+            json={"message": "returns some data"},
+        )
+        with error_raise:
+            resp = NhlApi().teams(team_ids=team_ids)
+            assert resp.status_code == status and resp.data == {
+                "message": "returns some data"
+            }

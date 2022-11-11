@@ -52,13 +52,21 @@ class NhlApi:
         """
         return self._request("GET", endpoint)
 
-    def teams(self) -> Response:
+    def teams(self, team_ids: list[int] | int = None) -> Response:
         """
         Sends a GET request to retrieve team data from the NHL API.
-        If no additional parameters are passed in, then all
-        data on the present NHL teams will be returned.
 
+        If `team_ids` is specified, it will filter the data to those specified teams.
+
+        If no parameters are passed in, then all data on the
+        current NHL teams will be returned.
+
+        :param team_ids: all the specific teams we want to see data for
         :return: data on all NHL teams
         """
-        teams_endpoint = "teams"
+        teams_endpoint = "teams?"
+        if team_ids:
+            team_ids = [team_ids] if isinstance(team_ids, int) else team_ids
+            all_ids = ",".join(str(x) for x in team_ids)
+            teams_endpoint += f"teamId={all_ids}&"
         return self.get(teams_endpoint)
