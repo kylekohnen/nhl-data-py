@@ -96,3 +96,26 @@ class TestNhlApi:
             assert resp.status_code == status and resp.data == {
                 "message": "returns some data"
             }
+
+    @responses.activate
+    @pytest.mark.parametrize(
+        "status, error_raise",
+        [
+            (200, nullcontext()),
+            (300, nullcontext()),
+            (400, pytest.raises(ResponseError)),
+            (500, pytest.raises(ResponseError)),
+        ],
+        ids=["status=200", "status=300", "status=400", "status=500"],
+    )
+    def test_teams_specified_season(self, status, error_raise):
+        responses.get(
+            f"{TestNhlApi.BASE_URL}/teams",
+            status=status,
+            json={"teams": {0: "team_name"}},
+        )
+        with error_raise:
+            resp = NhlApi().teams(season=2000)
+            assert resp.status_code == status and resp.data == {
+                "teams": {"0": "team_name"}
+            }
