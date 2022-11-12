@@ -1,12 +1,12 @@
 """
 Tests the `nhl_api.core.nhl_api` module.
 """
+from contextlib import nullcontext
+
 import pytest
 import responses
 
 from nhl_api.core.nhl_api import NhlApi, ResponseError
-
-BASE_URL = "https://statsapi.web.nhl.com/api/v1"
 
 
 class TestNhlApi:
@@ -14,22 +14,75 @@ class TestNhlApi:
     Tests the NhlApi class from the `nhl_data_py.nhl_api.nhl_api` module.
     """
 
-    @responses.activate
-    def test_get_200(self):
-        """
-        Tests `NhlApi.get` method on an endpoint that would return data with
-        code 200.
-        """
-        responses.get(f"{BASE_URL}/random-endpoint", status=200, json={"test": "NHL"})
-        resp = NhlApi().get("random-endpoint")
-        assert resp.status_code == 200 and resp.data == {"test": "NHL"}
+    BASE_URL = "https://statsapi.web.nhl.com/api/v1"
 
     @responses.activate
-    def test_404_exception_thrown(self):
+    @pytest.mark.parametrize("expected_status", [200, 300, 400, 500])
+    def test_get_json_is_available(self, expected_status):
         """
-        Tests `NhlApi.get` method on an endpoint that would return no data with
-        code 404
+        Tests `NhlApi.get` method on an endpoint that would return JSON data.
         """
-        responses.get(f"{BASE_URL}/random-endpoint", status=404)
-        with pytest.raises(ResponseError):
-            NhlApi().get("random-endpoint")
+        responses.get(
+            f"{TestNhlApi.BASE_URL}/random-endpoint",
+            status=expected_status,
+            json={"test": "NHL"},
+        )
+        if expected_status < 400:
+            resp = NhlApi().get("random-endpoint")
+            assert resp.status_code == expected_status and resp.data == {"test": "NHL"}
+        else:
+            with pytest.raises(ResponseError) as error:
+                NhlApi().get("random-endpoint")
+            assert error.match(f"GET method returns HTTP status code {expected_status}")
+
+    @responses.activate
+    @pytest.mark.parametrize("expected_status", [200, 300, 400, 500])
+    def test_get_json_is_unavailable(self, expected_status):
+        """
+        Tests `NhlApi.get` method on an endpoint that does not return JSON data.
+        """
+        responses.get(
+            f"{TestNhlApi.BASE_URL}/random-endpoint",
+            status=expected_status,
+            body="test: NHL",
+        )
+        if expected_status < 400:
+            resp = NhlApi().get("random-endpoint")
+            assert resp.status_code == expected_status and resp.data == {}
+        else:
+            with pytest.raises(ResponseError) as error:
+                NhlApi().get("random-endpoint")
+            assert error.match(f"GET method returns HTTP status code {expected_status}")
+
+    @responses.activate
+    @pytest.mark.parametrize(
+        "status, error_raise",
+        [
+            (200, nullcontext()),
+            (300, nullcontext()),
+            (400, pytest.raises(ResponseError)),
+            (500, pytest.raises(ResponseError)),
+        ],
+        ids=["status=200", "status=300", "status=400", "status=500"],
+    )
+    @pytest.mark.parametrize(
+        "team_ids", [None, 1, [1, 2, 3]], ids=(lambda x: f"team_ids={x}")
+    )
+    @pytest.mark.parametrize("season", [None, 2000], ids=(lambda x: f"season={x}"))
+    @pytest.mark.parametrize(
+        "roster", [None, True, False], ids=(lambda x: f"roster={x}")
+    )
+    @pytest.mark.parametrize("stats", [None, True, False], ids=(lambda x: f"stats={x}"))
+    def test_teams(self, status, error_raise, team_ids, season, roster, stats):
+        responses.get(
+            f"{TestNhlApi.BASE_URL}/teams",
+            status=status,
+            json={"teams": "random_data_here"},
+        )
+        with error_raise:
+            resp = NhlApi().teams(
+                team_ids=team_ids, season=season, roster=roster, stats=stats
+            )
+            assert resp.status_code == status and resp.data == {
+                "teams": "random_data_here"
+            }
