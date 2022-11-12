@@ -52,7 +52,13 @@ class NhlApi:
         """
         return self._request("GET", endpoint)
 
-    def teams(self, team_ids: list[int] | int = None, season: int = None) -> Response:
+    def teams(
+        self,
+        team_ids: list[int] | int = None,
+        season: int = None,
+        roster: bool = None,
+        stats: bool = None,
+    ) -> Response:
         """
         Sends a GET request to retrieve team data from the NHL API.
 
@@ -62,13 +68,20 @@ class NhlApi:
         The input should be the season's start year (e.g.
         `season=2010` correlates to the 2010 - 2011 season).
 
+        If `roster` is specified, it will display the entire roster for that team.
+
+        If `stats` is specified, it will display the entire roster for that team.
+
         If no parameters are passed in, then all data on the
         current NHL teams will be returned.
 
         :param team_ids: all the specific teams we want to see data for
         :param season: the start year of the season
+        :param roster: whether the teams entire roster should be included
+        :param stats: whether the teams season stats will be included
         :return: data on all NHL teams
         """
+        logger.debug((team_ids, season, roster, stats))
         teams_endpoint = "teams?"
         if team_ids:
             team_ids = [team_ids] if isinstance(team_ids, int) else team_ids
@@ -77,4 +90,8 @@ class NhlApi:
         if season:
             season = f"{season}{season + 1}"
             teams_endpoint += f"season={season}&"
+        if roster:
+            teams_endpoint += "expand=team.roster&"
+        if stats:
+            teams_endpoint += "expand=team.stats&"
         return self.get(teams_endpoint)

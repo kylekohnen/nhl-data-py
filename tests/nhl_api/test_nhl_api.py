@@ -63,59 +63,26 @@ class TestNhlApi:
             (400, pytest.raises(ResponseError)),
             (500, pytest.raises(ResponseError)),
         ],
-    )
-    def test_teams_default_behaviour(self, status, error_raise):
-        """
-        Tests the `NhlApi.teams` method's default behaviour.
-        """
-        responses.get(f"{TestNhlApi.BASE_URL}/teams", status=status, json={"teams": {}})
-        with error_raise:
-            resp = NhlApi().teams()
-            assert resp.status_code == status and resp.data == {"teams": {}}
-
-    @responses.activate
-    @pytest.mark.parametrize(
-        "status, error_raise",
-        [
-            (200, nullcontext()),
-            (300, nullcontext()),
-            (400, pytest.raises(ResponseError)),
-            (500, pytest.raises(ResponseError)),
-        ],
         ids=["status=200", "status=300", "status=400", "status=500"],
     )
-    @pytest.mark.parametrize("team_ids", [1, [1, 2, 3]], ids=["id=1", "id=[1,2,3]"])
-    def test_teams_specified_team_id(self, status, error_raise, team_ids):
+    @pytest.mark.parametrize(
+        "team_ids", [None, 1, [1, 2, 3]], ids=(lambda x: f"team_ids={x}")
+    )
+    @pytest.mark.parametrize("season", [None, 2000], ids=(lambda x: f"season={x}"))
+    @pytest.mark.parametrize(
+        "roster", [None, True, False], ids=(lambda x: f"roster={x}")
+    )
+    @pytest.mark.parametrize("stats", [None, True, False], ids=(lambda x: f"stats={x}"))
+    def test_teams(self, status, error_raise, team_ids, season, roster, stats):
         responses.get(
             f"{TestNhlApi.BASE_URL}/teams",
             status=status,
-            json={"message": "returns some data"},
+            json={"teams": "random_data_here"},
         )
         with error_raise:
-            resp = NhlApi().teams(team_ids=team_ids)
+            resp = NhlApi().teams(
+                team_ids=team_ids, season=season, roster=roster, stats=stats
+            )
             assert resp.status_code == status and resp.data == {
-                "message": "returns some data"
-            }
-
-    @responses.activate
-    @pytest.mark.parametrize(
-        "status, error_raise",
-        [
-            (200, nullcontext()),
-            (300, nullcontext()),
-            (400, pytest.raises(ResponseError)),
-            (500, pytest.raises(ResponseError)),
-        ],
-        ids=["status=200", "status=300", "status=400", "status=500"],
-    )
-    def test_teams_specified_season(self, status, error_raise):
-        responses.get(
-            f"{TestNhlApi.BASE_URL}/teams",
-            status=status,
-            json={"teams": {0: "team_name"}},
-        )
-        with error_raise:
-            resp = NhlApi().teams(season=2000)
-            assert resp.status_code == status and resp.data == {
-                "teams": {"0": "team_name"}
+                "teams": "random_data_here"
             }
