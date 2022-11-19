@@ -95,3 +95,51 @@ class NhlApi:
         if stats:
             teams_endpoint += "expand=team.stats&"
         return self.get(teams_endpoint)
+
+    def games(
+        self,
+        game_id: int = None,
+        plays: bool = False,
+        boxscore: bool = False,
+        teams: bool = False,
+    ) -> Response:
+        """
+        Sends a GET request to retrieve game data from the NHL API.
+
+        `game_id` is the ID of the game of interest.
+
+        If `plays` is not none, the response will contain the all game plays.
+
+        If `boxscore` is not none, the response will contain the box score.
+
+        If `teams` is not none, the response will contain the game's teams data.
+
+        If no bool parameters are passed, the response will
+        contain all of the data for the specified game.
+
+        :param game_id: the ID number of the specific game we want to see data for.
+        :param plays: whether the response should return all plays in the game.
+        :param boxscore: whether the response should return the boxscore for the game.
+        :param teams: whether the response should return the team data for the game.
+        """
+        assert game_id is not None, "You must request a specific game."
+        game_id = str(game_id)
+        if len(game_id) != 10:
+            raise ValueError("Invalid game ID.")
+        games_endpoint = "games/" + game_id
+
+        if not (plays and boxscore and teams):
+            games_endpoint += "/feed/live"
+            return self.get(games_endpoint)
+
+        elif plays:
+            # I need to access liveData -> plays
+            games_endpoint += "/feed/live"
+            json_gamedata = self.get(games_endpoint)
+
+        elif boxscore:
+            games_endpoint += "/boxscore"
+
+        elif teams:
+            # I need to access gameData -> teams
+            x = 1
