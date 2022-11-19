@@ -86,3 +86,40 @@ class TestNhlApi:
             assert resp.status_code == status and resp.data == {
                 "teams": "random_data_here"
             }
+
+    # Test game method
+    @responses.activate
+    @pytest.mark.parametrize(
+        "status, error_raise",
+        [
+            (200, nullcontext()),
+            (300, nullcontext()),
+            (400, pytest.raises(ResponseError)),
+            (500, pytest.raises(ResponseError)),
+        ],
+        ids=["status=200", "status=300", "status=400", "status=500"],
+    )
+    @pytest.mark.parametrize(
+        "game_id",
+        [None, 2017020001, [2017020001, 2017020002]],
+        ids=(lambda x: f"game_id={x}"),
+    )
+    @pytest.mark.parametrize("plays", [None, True, False], ids=(lambda x: f"play={x}"))
+    @pytest.mark.parametrize(
+        "boxscore", [None, True, False], ids=(lambda x: f"boxscore={x}")
+    )
+    @pytest.mark.parametrize("teams", [None, True, False], ids=(lambda x: f"teams={x}"))
+    def test_games(self, status, error_raise, game_id, plays, boxscore, teams):
+        responses.get(
+            # I do not understand what is happening here.
+            f"{TestNhlApi.BASE_URL}/games",
+            status=status,
+            json={"teams": "random_data_here"},
+        )
+        with error_raise:
+            resp = NhlApi().teams(
+                team_ids=game_id, plays=plays, boxscore=boxscore, teams=teams
+            )
+            assert resp.status_code == status and resp.data == {
+                "teams": "random_data_here"
+            }
