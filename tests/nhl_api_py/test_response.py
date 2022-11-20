@@ -5,7 +5,7 @@ import pytest
 import requests
 import responses
 
-from nhl_api.core.response import Response
+from nhl_api_py.core.response import Response
 
 
 class TestResponse:
