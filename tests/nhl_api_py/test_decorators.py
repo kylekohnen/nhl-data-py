@@ -5,7 +5,7 @@ from time import sleep
 
 import pytest
 
-from nhl_api.core.decorators import timing
+from nhl_api_py.core.decorators import timing
 
 
 def test_timing(caplog):
