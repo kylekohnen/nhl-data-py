@@ -6,7 +6,7 @@ from contextlib import nullcontext
 import pytest
 import responses
 
-from nhl_api.core.nhl_api import NhlApi, ResponseError
+from nhl_api_py.core.nhl_api import NhlApi, ResponseError
 
 
 class TestNhlApi:
