@@ -6,7 +6,7 @@ from contextlib import nullcontext
 import pytest
 import responses
 
-from nhl_api.core.nhl_api import NhlApi, ResponseError
+from nhl_api_dir.core.nhl_api import NhlApi, ResponseError
 
 
 class TestNhlApi:
@@ -87,7 +87,6 @@ class TestNhlApi:
                 "teams": "random_data_here"
             }
 
-    # Test game method
     @responses.activate
     @pytest.mark.parametrize(
         "status, error_raise",
@@ -100,26 +99,31 @@ class TestNhlApi:
         ids=["status=200", "status=300", "status=400", "status=500"],
     )
     @pytest.mark.parametrize(
-        "game_id",
-        [None, 2017020001, [2017020001, 2017020002]],
-        ids=(lambda x: f"game_id={x}"),
+        "boxscore, linescore, game_error",
+        [
+            (False, False, nullcontext()),
+            (False, True, nullcontext()),
+            (True, False, nullcontext()),
+            (True, True, pytest.raises(ValueError)),
+        ],
     )
-    @pytest.mark.parametrize("plays", [None, True, False], ids=(lambda x: f"play={x}"))
-    @pytest.mark.parametrize(
-        "boxscore", [None, True, False], ids=(lambda x: f"boxscore={x}")
-    )
-    @pytest.mark.parametrize("teams", [None, True, False], ids=(lambda x: f"teams={x}"))
-    def test_games(self, status, error_raise, game_id, plays, boxscore, teams):
+    def test_games(self, status, error_raise, boxscore, linescore, game_error):
+        if boxscore:
+            url = "boxscore"
+        elif linescore:
+            url = "linescore"
+        else:
+            url = "feed/live"
         responses.get(
-            # I do not understand what is happening here.
-            f"{TestNhlApi.BASE_URL}/games",
+            f"{TestNhlApi.BASE_URL}/game/2017020001/" + url,
             status=status,
-            json={"teams": "random_data_here"},
+            json={"game": "random_data_here"},
         )
-        with error_raise:
-            resp = NhlApi().teams(
-                team_ids=game_id, plays=plays, boxscore=boxscore, teams=teams
-            )
-            assert resp.status_code == status and resp.data == {
-                "teams": "random_data_here"
-            }
+        with game_error:
+            with error_raise:
+                resp = NhlApi().games(
+                    game_id=2017020001, boxscore=boxscore, linescore=linescore
+                )
+                assert resp.status_code == status and resp.data == {
+                    "game": "random_data_here"
+                }

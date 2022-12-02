@@ -5,9 +5,9 @@ import logging
 
 from requests import request
 
-from nhl_api.core.decorators import timing
-from nhl_api.core.error_exceptions import ResponseError
-from nhl_api.core.response import Response
+from nhl_api_dir.core.decorators import timing
+from nhl_api_dir.core.error_exceptions import ResponseError
+from nhl_api_dir.core.response import Response
 
 logger = logging.getLogger(__name__)
 
@@ -126,20 +126,5 @@ class NhlApi:
         game_id = str(game_id)
         if len(game_id) != 10:
             raise ValueError("Invalid game ID.")
-        games_endpoint = "games/" + game_id
-
-        if not (plays and boxscore and teams):
-            games_endpoint += "/feed/live"
-            return self.get(games_endpoint)
-
-        elif plays:
-            # I need to access liveData -> plays
-            games_endpoint += "/feed/live"
-            json_gamedata = self.get(games_endpoint)
-
-        elif boxscore:
-            games_endpoint += "/boxscore"
-
-        elif teams:
-            # I need to access gameData -> teams
-            x = 1
+        games_endpoint = "game/" + game_id
+        return games_endpoint
