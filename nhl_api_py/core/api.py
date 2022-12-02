@@ -5,9 +5,10 @@ import logging
 
 from requests import request
 
-from nhl_api_dir.core.decorators import timing
-from nhl_api_dir.core.error_exceptions import ResponseError
-from nhl_api_dir.core.response import Response
+
+from nhl_api_py.core.decorators import timing
+from nhl_api_py.core.error_exceptions import ResponseError
+from nhl_api_py.core.response import Response
 
 logger = logging.getLogger(__name__)
 
@@ -99,32 +100,35 @@ class NhlApi:
     def games(
         self,
         game_id: int = None,
-        plays: bool = False,
         boxscore: bool = False,
-        teams: bool = False,
+        linescore: bool = False,
     ) -> Response:
         """
         Sends a GET request to retrieve game data from the NHL API.
 
         `game_id` is the ID of the game of interest.
 
-        If `plays` is not none, the response will contain the all game plays.
+        If `boxscore` is true, the response will contain only the boxscore.
 
-        If `boxscore` is not none, the response will contain the box score.
-
-        If `teams` is not none, the response will contain the game's teams data.
+        If `linescore` is true, the response will contain only the linescore.
 
         If no bool parameters are passed, the response will
         contain all of the data for the specified game.
 
         :param game_id: the ID number of the specific game we want to see data for.
-        :param plays: whether the response should return all plays in the game.
         :param boxscore: whether the response should return the boxscore for the game.
-        :param teams: whether the response should return the team data for the game.
+        :param linescore: whether the response should return the linescore for the game.
         """
-        assert game_id is not None, "You must request a specific game."
-        game_id = str(game_id)
-        if len(game_id) != 10:
-            raise ValueError("Invalid game ID.")
-        games_endpoint = "game/" + game_id
-        return games_endpoint
+        logger.debug((game_id, boxscore, linescore))
+
+        if boxscore and linescore:
+            raise ValueError("You may request boxscore or linescore, not both.")
+
+        games_endpoint = "game/" + str(game_id)
+        if boxscore:
+            games_endpoint += "/boxscore"
+        elif linescore:
+            games_endpoint += "/linescore"
+        else:
+            games_endpoint += "/feed/live"
+        return self.get(games_endpoint)

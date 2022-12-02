@@ -4,7 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["Kyle Kohnen <github@kylekohnen.com>"]
 readme = "README.md"
-packages = [{include = "nhl_api"}]
+packages = [{include = "nhl_api_py"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
