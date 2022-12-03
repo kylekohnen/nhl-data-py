@@ -86,3 +86,44 @@ class TestNhlApi:
             assert resp.status_code == status and resp.data == {
                 "teams": "random_data_here"
             }
+
+    @responses.activate
+    @pytest.mark.parametrize(
+        "status, status_error",
+        [
+            (200, nullcontext()),
+            (300, nullcontext()),
+            (400, pytest.raises(ResponseError)),
+            (500, pytest.raises(ResponseError)),
+        ],
+        ids=["status=200", "status=300", "status=400", "status=500"],
+    )
+    @pytest.mark.parametrize(
+        "boxscore, linescore, game_error",
+        [
+            (False, False, nullcontext()),
+            (False, True, nullcontext()),
+            (True, False, nullcontext()),
+            (True, True, pytest.raises(ValueError)),
+        ],
+    )
+    def test_games(self, status, status_error, boxscore, linescore, game_error):
+        if boxscore:
+            url = "boxscore"
+        elif linescore:
+            url = "linescore"
+        else:
+            url = "feed/live"
+        responses.get(
+            f"{TestNhlApi.BASE_URL}/game/2017020001/" + url,
+            status=status,
+            json={"game": "random_data_here"},
+        )
+        with game_error:
+            with status_error:
+                resp = NhlApi().game(
+                    game_id=2017020001, boxscore=boxscore, linescore=linescore
+                )
+                assert resp.status_code == status and resp.data == {
+                    "game": "random_data_here"
+                }
