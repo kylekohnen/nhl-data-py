@@ -121,7 +121,7 @@ class TestNhlApi:
         )
         with game_error:
             with status_error:
-                resp = NhlApi().games(
+                resp = NhlApi().game(
                     game_id=2017020001, boxscore=boxscore, linescore=linescore
                 )
                 assert resp.status_code == status and resp.data == {
