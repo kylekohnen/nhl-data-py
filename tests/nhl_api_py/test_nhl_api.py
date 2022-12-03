@@ -89,7 +89,7 @@ class TestNhlApi:
 
     @responses.activate
     @pytest.mark.parametrize(
-        "status, error_raise",
+        "status, status_error",
         [
             (200, nullcontext()),
             (300, nullcontext()),
@@ -107,7 +107,7 @@ class TestNhlApi:
             (True, True, pytest.raises(ValueError)),
         ],
     )
-    def test_games(self, status, error_raise, boxscore, linescore, game_error):
+    def test_games(self, status, status_error, boxscore, linescore, game_error):
         if boxscore:
             url = "boxscore"
         elif linescore:
@@ -120,7 +120,7 @@ class TestNhlApi:
             json={"game": "random_data_here"},
         )
         with game_error:
-            with error_raise:
+            with status_error:
                 resp = NhlApi().games(
                     game_id=2017020001, boxscore=boxscore, linescore=linescore
                 )

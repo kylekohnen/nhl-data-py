@@ -97,25 +97,25 @@ class NhlApi:
             teams_endpoint += "expand=team.stats&"
         return self.get(teams_endpoint)
 
-    def games(
+    def game(
         self,
-        game_id: int = None,
+        game_id: int,
         boxscore: bool = False,
         linescore: bool = False,
     ) -> Response:
         """
         Sends a GET request to retrieve game data from the NHL API.
 
-        `game_id` is the ID of the game of interest.
+        If `boxscore` is True, the response will contain only the boxscore.
 
-        If `boxscore` is true, the response will contain only the boxscore.
+        If `linescore` is True, the response will contain only the linescore.
 
-        If `linescore` is true, the response will contain only the linescore.
+        `linescore` and `boxscore` may not both be True.
 
-        If no bool parameters are passed, the response will
+        If neither `linescore` nor `boxscore` are passed, the response will
         contain all of the data for the specified game.
 
-        :param game_id: the ID number of the specific game we want to see data for.
+        :param game_id: the ID of the specific game for which we want to see data.
         :param boxscore: whether the response should return the boxscore for the game.
         :param linescore: whether the response should return the linescore for the game.
         """
