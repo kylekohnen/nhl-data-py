@@ -1,6 +1,13 @@
+from __future__ import annotations
+
+import logging
 from abc import ABC
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from typing import Optional
+
+from nhl_api_py.core.utils import camel_to_snake_case
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -8,6 +15,33 @@ class Model(ABC):
     """
     Base class that all Models from the NHL API are based off of.
     """
+
+    @classmethod
+    def from_kwargs(cls, **kwargs):
+        """
+        Helper function which performs removes specific keywords / fields
+        from the response data depending on the Model.
+        It preserves the dataclass' `__init__` method, making initialization
+        easier for all subclasses.
+
+        This should be called rather than the model's `__init__` method.
+        This is because this method will account for possible data fields that may be
+        included from some response data, that is not accounted for in models.
+        Additionally, it replaces all camelCase fields to snake_case.
+
+        :return: _description_
+        """
+        kwargs = {camel_to_snake_case(key): value for key, value in kwargs.items()}
+        included_keys = [
+            key for key in kwargs if key in (field.name for field in fields(cls))
+        ]
+        keys_not_defined = [key for key in kwargs if key not in included_keys]
+        if len(keys_not_defined) > 0:
+            logger.warning(
+                "The following arguments were included in the response data "
+                + f"but are being excluded: {keys_not_defined}"
+            )
+        return cls(**{k: v for k, v in kwargs.items() if k in included_keys})
 
 
 @dataclass

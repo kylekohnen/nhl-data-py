@@ -5,7 +5,6 @@ import logging
 
 from requests import request
 
-
 from nhl_api_py.core.decorators import timing
 from nhl_api_py.core.error_exceptions import ResponseError
 from nhl_api_py.core.response import Response
