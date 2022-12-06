@@ -5,6 +5,8 @@ from abc import ABC
 from dataclasses import dataclass, fields
 from typing import Optional
 
+import pandas as pd
+
 from nhl_api_py.core.utils import camel_to_snake_case
 
 logger = logging.getLogger(__name__)
@@ -42,6 +44,19 @@ class Model(ABC):
                 + f"but are being excluded: {keys_not_defined}"
             )
         return cls(**{k: v for k, v in kwargs.items() if k in included_keys})
+
+    def to_series(self, remove_missing_values: bool = True) -> pd.Series:
+        """
+        Convenience method which generates a pandas Series from the dataclass.
+
+        :param remove_missing_values: whether missing values should be
+            kept in the series, defaults to True
+        :return: all attributes ordered in a pandas Series
+        """
+        column = pd.Series(self.__dict__)
+        if remove_missing_values:
+            column.dropna(inplace=True)
+        return column
 
 
 @dataclass
