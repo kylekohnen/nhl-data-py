@@ -7,6 +7,7 @@ import pytest
 import responses
 
 from nhl_api_py.core.api import NhlApi, ResponseError
+from nhl_api_py.core.models import Team
 
 
 class TestNhlApi:
@@ -73,19 +74,41 @@ class TestNhlApi:
         "roster", [None, True, False], ids=(lambda x: f"roster={x}")
     )
     @pytest.mark.parametrize("stats", [None, True, False], ids=(lambda x: f"stats={x}"))
-    def test_teams(self, status, error_raise, team_ids, season, roster, stats):
+    @pytest.mark.parametrize(
+        "resp_data, expected",
+        [
+            ({"teams": []}, []),
+            (dict(), []),
+            ({"teams": [dict()]}, [Team()]),
+            ({"teams": [{"id": 1}]}, [Team(id=1)]),
+            ({"teams": [{"not_valid_key": "ooga"}]}, [Team()]),
+            (
+                {"teams": [{"id": {"key1": None, "key2": "hi"}}]},
+                [Team(id={"key1": None, "key2": "hi"})],
+            ),
+        ],
+        ids=[
+            "empty_data_with_team_key",
+            "empty_data",
+            "empty_team_data",
+            "team_with_id",
+            "team_with_unknown_key",
+            "team_with_nested_dict",
+        ],
+    )
+    def test_teams(
+        self, status, error_raise, team_ids, season, roster, stats, resp_data, expected
+    ):
         responses.get(
             f"{TestNhlApi.BASE_URL}/teams",
             status=status,
-            json={"teams": "random_data_here"},
+            json=resp_data,
         )
         with error_raise:
-            resp = NhlApi().teams(
+            result = NhlApi().teams(
                 team_ids=team_ids, season=season, roster=roster, stats=stats
             )
-            assert resp.status_code == status and resp.data == {
-                "teams": "random_data_here"
-            }
+            assert result == expected
 
     @responses.activate
     @pytest.mark.parametrize(
