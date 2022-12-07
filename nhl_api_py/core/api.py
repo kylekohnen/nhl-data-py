@@ -7,6 +7,7 @@ from requests import request
 
 from nhl_api_py.core.decorators import timing
 from nhl_api_py.core.error_exceptions import ResponseError
+from nhl_api_py.core.models import Team
 from nhl_api_py.core.response import Response
 
 logger = logging.getLogger(__name__)
@@ -94,7 +95,15 @@ class NhlApi:
             teams_endpoint += "expand=team.roster&"
         if stats:
             teams_endpoint += "expand=team.stats&"
-        return self.get(teams_endpoint)
+        response = self.get(teams_endpoint)
+        data = response.data.get("teams", [])
+        if len(data) == 0:
+            logger.warning(
+                "Response Data did not have proper team data. "
+                + "Either the `teams` key was missing or no data exists."
+            )
+            logger.debug(response.data)
+        return [Team.from_kwargs(**team_entry) for team_entry in data]
 
     def game(
         self,
