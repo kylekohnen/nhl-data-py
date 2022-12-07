@@ -110,7 +110,7 @@ class NhlApi:
         game_id: int,
         boxscore: bool = False,
         linescore: bool = False,
-    ) -> Response:
+    ) -> list[Team]:
         """
         Sends a GET request to retrieve game data from the NHL API.
 
@@ -126,6 +126,7 @@ class NhlApi:
         :param game_id: the ID of the specific game for which we want to see data.
         :param boxscore: whether the response should return the boxscore for the game.
         :param linescore: whether the response should return the linescore for the game.
+        :return: list of Team models
         """
         logger.debug((game_id, boxscore, linescore))
 
