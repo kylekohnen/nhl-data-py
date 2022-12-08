@@ -9,6 +9,7 @@ __pycache__/
 # Testing / Coverage
 .coverage
 .coverage.*
+htmlcov/
 .pytest_cache/
 
 # IDE / Text Editors
