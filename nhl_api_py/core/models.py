@@ -31,7 +31,7 @@ class Model(ABC):
         included from some response data, that is not accounted for in models.
         Additionally, it replaces all camelCase fields to snake_case.
 
-        :return: _description_
+        :return: an instance of the model
         """
         kwargs = {camel_to_snake_case(key): value for key, value in kwargs.items()}
         included_keys = [
@@ -82,3 +82,16 @@ class Team(Model):
     official_site_url: Optional[str] = None
     franchise_id: Optional[int] = None
     active: Optional[bool] = None
+
+
+@dataclass
+class Play(Model):
+    """
+    Represents and contains all data for a single play from an NHL game.
+    """
+
+    players: Optional[list] = None
+    result: Optional[dict] = None
+    about: Optional[dict] = None
+    coordinates: Optional[dict] = None
+    team: Optional[dict] = None
