@@ -10,6 +10,7 @@ from nhl_api_py.core.utils import camel_to_snake_case
         ("is_snake_case", "is_snake_case"),
         ("camelCase", "camel_case"),
         ("simpletextthatisalllower", "simpletextthatisalllower"),
+        ("snake_thenCamelCase", "snake_then_camel_case"),
     ],
 )
 def test_camel_to_snake_case(test_value, expected):

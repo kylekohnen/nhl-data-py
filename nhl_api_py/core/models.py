@@ -7,7 +7,7 @@ from typing import Optional
 
 import pandas as pd
 
-from nhl_api_py.core.utils import camel_to_snake_case
+from nhl_api_py.core.utils import camel_to_snake_case, flatten_dictionary
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +33,7 @@ class Model(ABC):
 
         :return: an instance of the model
         """
+        kwargs = dict(flatten_dictionary(kwargs), **kwargs)
         kwargs = {camel_to_snake_case(key): value for key, value in kwargs.items()}
         included_keys = [
             key for key in kwargs if key in (field.name for field in fields(cls))
@@ -91,7 +92,19 @@ class Play(Model):
     """
 
     players: Optional[list] = None
-    result: Optional[dict] = None
+    result_event: Optional[str] = None
+    result_event_type_id: Optional[str] = None
+    result_description: Optional[str] = None
+    result_secondary_type: Optional[str] = None
     about: Optional[dict] = None
     coordinates: Optional[dict] = None
-    team: Optional[dict] = None
+    team: Optional[Team] = None
+
+    @classmethod
+    def from_kwargs(cls, **kwargs):
+        play: Play = super().from_kwargs(**kwargs)
+        if isinstance(play.team, dict):
+            team = play.team.copy()
+            team["abbreviation"] = team.pop("triCode")
+        play.team = Team.from_kwargs(**team) if isinstance(team, dict) else None
+        return play
