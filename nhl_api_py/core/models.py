@@ -96,13 +96,26 @@ class Play(Model):
     result_event_type_id: Optional[str] = None
     result_description: Optional[str] = None
     result_secondary_type: Optional[str] = None
-    about: Optional[dict] = None
+    result_strength_name: Optional[str] = None
+    result_game_winning_goal: Optional[bool] = None
+    result_empty_net: Optional[bool] = None
+    result_penalty_severity: Optional[str] = None
+    result_penalty_minutes: Optional[str] = None
+    about_period: Optional[int] = None
+    about_period_type: Optional[str] = None
+    about_ordinal_num: Optional[str] = None
+    about_period_time: Optional[str] = None
+    about_period_time_remaining: Optional[str] = None
+    about_date_time: Optional[str] = None
+    about_goals_away: Optional[int] = None
+    about_goals_home: Optional[int] = None
     coordinates: Optional[dict] = None
     team: Optional[Team] = None
 
     @classmethod
     def from_kwargs(cls, **kwargs):
         play: Play = super().from_kwargs(**kwargs)
+        # Turn Team Dict if its from a Response to a Team Model
         if isinstance(play.team, dict):
             team = play.team.copy()
             team["abbreviation"] = team.pop("triCode")
