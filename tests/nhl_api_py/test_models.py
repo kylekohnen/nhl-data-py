@@ -62,8 +62,15 @@ class TestPlay:
             ({"players": []}, Play(players=[])),
             ({"nonExistentField": "f"}, Play()),
             ({"result": {"event": "some_event"}}, Play(event="some_event")),
+            ({"team": {"id": 1}}, Play(team=Team(id=1))),
         ],
-        ids=["missing_parameters", "expected_kwarg", "non_real_kwarg", "nested_attr"],
+        ids=[
+            "missing_parameters",
+            "expected_kwarg",
+            "non_real_kwarg",
+            "nested_attr",
+            "teams_created",
+        ],
     )
     def test_from_dict(self, input, expected):
         result = Play.from_dict(input)

@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, fields
-from typing import Optional
+from typing import Optional, Type
 
 import pandas as pd
 
@@ -76,19 +76,8 @@ class Team(Model):
 
     @classmethod
     def from_dict(cls, data: dict):
-        converted_data = convert_keys_to_snake_case(data)
-        included_keys = [
-            key
-            for key in converted_data
-            if key in (field.name for field in fields(cls))
-        ]
-        keys_not_defined = [key for key in converted_data if key not in included_keys]
-        if len(keys_not_defined) > 0:
-            logger.debug(
-                "The following arguments were included in the response data "
-                + f"but are being excluded: {keys_not_defined}"
-            )
-        return cls(**{k: v for k, v in converted_data.items() if k in included_keys})
+        converted_data = _field_only_keys(data, cls)
+        return cls(**converted_data)
 
 
 @dataclass
@@ -120,22 +109,29 @@ class Play(Model):
 
     @classmethod
     def from_dict(cls, data: dict):
-        def extract_if_its_a_field(data: dict):
-            return {
-                k: v
-                for k, v in data.items()
-                if k in (field.name for field in fields(cls))
-            }
-
         converted_data = convert_keys_to_snake_case(data)
         # Extract nested data after top-level if it exists
-        top_level_data = extract_if_its_a_field(converted_data)
-        result_data = extract_if_its_a_field(converted_data.get("result", dict()))
-        about_data = extract_if_its_a_field(converted_data.get("about", dict()))
-        team_data = (
-            Team.from_dict(extract_if_its_a_field(converted_data.get("team")))
-            if "team" in converted_data
-            else None
-        )
-        final_data = {**top_level_data, **result_data, **about_data, "team": team_data}
+        top_level_data = _field_only_keys(converted_data, cls)
+        result_data = _field_only_keys(converted_data.get("result", dict()), cls)
+        about_data = _field_only_keys(converted_data.get("about", dict()), cls)
+        team_data = _field_only_keys(converted_data.get("team", dict()), Team)
+        team_data = Team.from_dict(team_data) if len(team_data) != 0 else None
+        final_data = {
+            **top_level_data,
+            **result_data,
+            **about_data,
+            "team": team_data,
+        }
         return cls(**final_data)
+
+
+def _field_only_keys(data: dict, cls: Type[Model]) -> dict:
+    """
+    Helper function that extracts only the keys from a dictionary that is a
+    field / attribute from a Model.
+
+    :param data: the dictionary we want to observe
+    :param cls: the Model we want to consider
+    :return: the same dictionary with only the model's fields
+    """
+    return {k: v for k, v in data.items() if k in (field.name for field in fields(cls))}
