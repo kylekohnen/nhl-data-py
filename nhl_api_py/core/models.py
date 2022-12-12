@@ -76,8 +76,8 @@ class Team(Model):
 
     @classmethod
     def from_dict(cls, data: dict):
-        converted_data = _field_only_keys(data, cls)
-        return cls(**converted_data)
+        converted_data = convert_keys_to_snake_case(data)
+        return cls(**_field_only_keys(converted_data, cls))
 
 
 @dataclass
