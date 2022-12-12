@@ -103,7 +103,7 @@ class NhlApi:
                 + "Either the `teams` key was missing or no data exists."
             )
             logger.debug(response.data)
-        return [Team.from_kwargs(**team_entry) for team_entry in data]
+        return [Team.from_dict(team_entry) for team_entry in data]
 
     def game(
         self,

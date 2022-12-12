@@ -6,21 +6,19 @@ def camel_to_snake_case(value: str) -> str:
     return re.sub(r_string, "_", value).lower()
 
 
-def flatten_dictionary(d: dict, parent_key="", sep="_") -> dict:
+def convert_keys_to_snake_case(d: dict) -> dict:
     """
-    Flattens a dictionary; takes any nested dictionaries and adds them to the top
-    level. The key of nested dictionaries would be in the form of `parent_key`_`key`.
+    Converts all the keys in a given dictionary to snake case.
+    It will traverse through nested dictionaries as well.
 
-    :param d: the dictionary we want to flatten
-    :param parent_key: helper kwarg to label what the key name should be, defaults to ""
-    :param sep: what the separator is for the new keys, defaults to "_"
-    :return: the dictionary inputted but flattened
+    :param d: the dictionary we want to convert keys for
+    :return: the same dictionary with converted keys
     """
-    items = []
+    new_data = {}
     for k, v in d.items():
-        new_key = parent_key + sep + k if parent_key else k
+        new_key = camel_to_snake_case(k)
         if isinstance(v, dict):
-            items.extend(flatten_dictionary(v, new_key, sep=sep).items())
+            new_data[new_key] = convert_keys_to_snake_case(v)
         else:
-            items.append((new_key, v))
-    return dict(items)
+            new_data[new_key] = v
+    return new_data
