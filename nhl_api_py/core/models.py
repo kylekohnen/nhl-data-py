@@ -19,7 +19,7 @@ class Model(ABC):
     """
 
     @abstractmethod
-    def from_dict(cls, data: dict):
+    def from_dict(cls, data: dict):  # pragma: no cover
         """
         Helper function which performs removes specific keywords / fields
         from the response data depending on the Model.
