@@ -7,7 +7,7 @@ from requests import request
 
 from nhl_api_py.core.decorators import timing
 from nhl_api_py.core.error_exceptions import ResponseError
-from nhl_api_py.core.models import Team
+from nhl_api_py.core.models import Play, Team
 from nhl_api_py.core.response import Response
 
 logger = logging.getLogger(__name__)
@@ -103,7 +103,7 @@ class NhlApi:
                 + "Either the `teams` key was missing or no data exists."
             )
             logger.debug(response.data)
-        return [Team.from_kwargs(**team_entry) for team_entry in data]
+        return [Team.from_dict(team_entry) for team_entry in data]
 
     def game(
         self,
@@ -141,3 +141,14 @@ class NhlApi:
         else:
             games_endpoint += "/feed/live"
         return self.get(games_endpoint)
+
+    def plays(
+        self,
+        game_id: int,
+        scoring_plays_only: bool = False,
+        penalty_plays_only: bool = False,
+    ) -> list[Play]:
+        # Call Games Method (raising NotImplementedError for now)
+        # Extract Plays from Game Model
+        # Use kwargs to do filtering
+        raise NotImplementedError

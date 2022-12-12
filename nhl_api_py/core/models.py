@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, fields
-from typing import Optional
+from typing import Optional, Type
 
 import pandas as pd
 
-from nhl_api_py.core.utils import camel_to_snake_case
+from nhl_api_py.core.utils import convert_keys_to_snake_case
 
 logger = logging.getLogger(__name__)
 
@@ -18,8 +18,8 @@ class Model(ABC):
     Base class that all Models from the NHL API are based off of.
     """
 
-    @classmethod
-    def from_kwargs(cls, **kwargs):
+    @abstractmethod
+    def from_dict(cls, data: dict):  # pragma: no cover
         """
         Helper function which performs removes specific keywords / fields
         from the response data depending on the Model.
@@ -31,19 +31,10 @@ class Model(ABC):
         included from some response data, that is not accounted for in models.
         Additionally, it replaces all camelCase fields to snake_case.
 
-        :return: _description_
+        :param data: dictionary containing all the data (e.g. the response data)
+        :return: an instance of the model
         """
-        kwargs = {camel_to_snake_case(key): value for key, value in kwargs.items()}
-        included_keys = [
-            key for key in kwargs if key in (field.name for field in fields(cls))
-        ]
-        keys_not_defined = [key for key in kwargs if key not in included_keys]
-        if len(keys_not_defined) > 0:
-            logger.warning(
-                "The following arguments were included in the response data "
-                + f"but are being excluded: {keys_not_defined}"
-            )
-        return cls(**{k: v for k, v in kwargs.items() if k in included_keys})
+        raise NotImplementedError
 
     def to_series(self, remove_missing_values: bool = True) -> pd.Series:
         """
@@ -82,3 +73,65 @@ class Team(Model):
     official_site_url: Optional[str] = None
     franchise_id: Optional[int] = None
     active: Optional[bool] = None
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        converted_data = convert_keys_to_snake_case(data)
+        return cls(**_field_only_keys(converted_data, cls))
+
+
+@dataclass
+class Play(Model):
+    """
+    Represents and contains all data for a single play from an NHL game.
+    """
+
+    players: Optional[list] = None
+    event: Optional[str] = None
+    event_type_id: Optional[str] = None
+    description: Optional[str] = None
+    secondary_type: Optional[str] = None
+    strength_name: Optional[str] = None
+    game_winning_goal: Optional[bool] = None
+    empty_net: Optional[bool] = None
+    penalty_severity: Optional[str] = None
+    penalty_minutes: Optional[str] = None
+    period: Optional[int] = None
+    period_type: Optional[str] = None
+    ordinal_num: Optional[str] = None
+    period_time: Optional[str] = None
+    period_time_remaining: Optional[str] = None
+    date_time: Optional[str] = None
+    goals_away: Optional[int] = None
+    goals_home: Optional[int] = None
+    coordinates: Optional[dict] = None
+    team: Optional[Team] = None
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        converted_data = convert_keys_to_snake_case(data)
+        # Extract nested data after top-level if it exists
+        top_level_data = _field_only_keys(converted_data, cls)
+        result_data = _field_only_keys(converted_data.get("result", dict()), cls)
+        about_data = _field_only_keys(converted_data.get("about", dict()), cls)
+        team_data = _field_only_keys(converted_data.get("team", dict()), Team)
+        team_data = Team.from_dict(team_data) if len(team_data) != 0 else None
+        final_data = {
+            **top_level_data,
+            **result_data,
+            **about_data,
+            "team": team_data,
+        }
+        return cls(**final_data)
+
+
+def _field_only_keys(data: dict, cls: Type[Model]) -> dict:
+    """
+    Helper function that extracts only the keys from a dictionary that is a
+    field / attribute from a Model.
+
+    :param data: the dictionary we want to observe
+    :param cls: the Model we want to consider
+    :return: the same dictionary with only the model's fields
+    """
+    return {k: v for k, v in data.items() if k in (field.name for field in fields(cls))}
