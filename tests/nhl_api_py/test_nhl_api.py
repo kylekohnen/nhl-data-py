@@ -7,7 +7,7 @@ import pytest
 import responses
 
 from nhl_api_py.core.api import NhlApi, ResponseError
-from nhl_api_py.core.models import Team, GeneralGame, BoxscoreGame
+from nhl_api_py.core.models import BoxscoreGame, GeneralGame, Team
 
 
 class TestNhlApi:
@@ -130,23 +130,34 @@ class TestNhlApi:
             (True, True, pytest.raises(ValueError)),
         ],
     )
-    def test_games(self, status, status_error, boxscore, linescore, game_error):
+    def test_games(
+        self,
+        status,
+        status_error,
+        boxscore,
+        linescore,
+        game_error,
+    ):
         if boxscore:
             url = "boxscore"
+            resp_data = {}
+            expected = BoxscoreGame()
         elif linescore:
             url = "linescore"
+            resp_data = {"game": "random_data_here"}
+            expected = resp_data
         else:
             url = "feed/live"
+            resp_data = {"gameData": {"game": {"pk": 0}}}
+            expected = GeneralGame(pk=0)
         responses.get(
             f"{TestNhlApi.BASE_URL}/game/2017020001/" + url,
             status=status,
-            json={"game": "random_data_here"},
+            json=resp_data,
         )
         with game_error:
             with status_error:
-                resp = NhlApi().game(
+                result = NhlApi().game(
                     game_id=2017020001, boxscore=boxscore, linescore=linescore
                 )
-                assert resp.status_code == status and resp.data == {
-                    "game": "random_data_here"
-                }
+                assert result == expected

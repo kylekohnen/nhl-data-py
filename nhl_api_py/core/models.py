@@ -142,28 +142,37 @@ class GeneralGame(Model):
     start_time_tbd: Optional[bool] = None
     away: Optional[Team] = None
     home: Optional[Team] = None
+    plays: Optional[dict] = None  # Needs to be converted to list(Play)
 
     @classmethod
     def from_dict(cls, data: dict):
         converted_data = convert_keys_to_snake_case(data)
+
         # Extract nested data after top-level if it exists
-        top_level_data = _field_only_keys(converted_data, cls)
-        game_data = _field_only_keys(converted_data.get("game", dict()), cls)
-        datetime_data = _field_only_keys(converted_data.get("datetime", dict()), cls)
-        status_data = _field_only_keys(converted_data.get("status", dict()), cls)
-        teams_data = _field_only_keys(converted_data.get("teams", dict()), cls)
+        game_data = converted_data.get("game_data", dict())
+        live_data = converted_data.get("live_data", dict())
+
+        game = _field_only_keys(game_data.get("game", dict()), cls)
+        datetime_data = _field_only_keys(game_data.get("datetime", dict()), cls)
+        status_data = _field_only_keys(game_data.get("status", dict()), cls)
+
         # Extract one nested dict further for teams data if it exists
+        teams_data = _field_only_keys(game_data.get("teams", dict()), cls)
         away_data = _field_only_keys(teams_data.get("away", dict()), Team)
-        home_data = _field_only_keys(teams_data.get("home", dict()), Team)
         away_data = Team.from_dict(away_data) if len(away_data) != 0 else None
+        home_data = _field_only_keys(teams_data.get("home", dict()), Team)
         home_data = Team.from_dict(home_data) if len(home_data) != 0 else None
+
+        play_data = _field_only_keys(live_data.get("plays", dict()), cls)
+        play_data = _field_only_keys(play_data.get("all_plays", dict()), Play)
+        play_data = Play.from_dict(play_data) if len(play_data) != 0 else None
         final_data = {
-            **top_level_data,
-            **game_data,
+            **game,
             **datetime_data,
             **status_data,
             "away": away_data,
             "home": home_data,
+            "plays": play_data,
         }
         return cls(**final_data)
 
@@ -174,7 +183,6 @@ class BoxscoreGame(Model):
     Represents and contains boxscore data from a given game, returned from the NHL API.
     """
 
-    pk: Optional[int] = None
     away: Optional[Team] = None
     home: Optional[Team] = None
     officials: Optional[dict] = None  # It may be beneficial to make an officials class.
@@ -182,14 +190,16 @@ class BoxscoreGame(Model):
     @classmethod
     def from_dict(cls, data: dict):
         converted_data = convert_keys_to_snake_case(data)
-        # Extract nested data after top-level if it exists
-        teams_data = _field_only_keys(converted_data.get("teams", dict()), cls)
-        # Extract one nested dict further for teams data if it exists
-        away_data = _field_only_keys(teams_data.get("away", dict()), Team)
-        home_data = _field_only_keys(teams_data.get("home", dict()), Team)
+        top_level_data = _field_only_keys(converted_data, cls)
+        teams_data = converted_data.get("teams", dict())
+
+        away_data = teams_data.get("away", dict())
         away_data = Team.from_dict(away_data) if len(away_data) != 0 else None
+
+        home_data = teams_data.get("home", dict())
         home_data = Team.from_dict(home_data) if len(home_data) != 0 else None
-        final_data = {"away": away_data, "home": home_data}
+
+        final_data = {**top_level_data, "away": away_data, "home": home_data}
         return cls(**final_data)
 
 

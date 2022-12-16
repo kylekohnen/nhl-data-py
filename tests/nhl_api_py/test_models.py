@@ -3,7 +3,7 @@ from dataclasses import fields
 import pandas as pd
 import pytest
 
-from nhl_api_py.core.models import Play, Team, GeneralGame, BoxscoreGame
+from nhl_api_py.core.models import BoxscoreGame, GeneralGame, Play, Team
 
 
 class TestTeam:
@@ -109,9 +109,12 @@ class TestGeneralGame:
         "input, expected",
         [
             (dict(), GeneralGame()),
-            ({"game": {"pk": 0}}, GeneralGame(pk=0)),
-            ({"game": {"nonExistentField": "f"}}, GeneralGame()),
-            ({"teams": {"away": {"id": 1}}}, GeneralGame(away=Team(id=1))),
+            ({"gameData": {"game": {"pk": 0}}}, GeneralGame(pk=0)),
+            ({"gameData": {"game": {"nonExistentField": "f"}}}, GeneralGame()),
+            (
+                {"GameData": {"teams": {"away": {"id": 1}}}},
+                GeneralGame(away=Team(id=1)),
+            ),
         ],
         ids=[
             "missing_parameters",
@@ -161,7 +164,7 @@ class TestBoxscoreGame:
         "input, expected",
         [
             (dict(), BoxscoreGame()),
-            ({"officials": {}}, BoxscoreGame()),
+            ({"officials": {}}, BoxscoreGame(officials={})),
             ({"teams": {"away": {"id": 1}}}, BoxscoreGame(away=Team(id=1))),
         ],
         ids=[
@@ -183,11 +186,13 @@ class TestBoxscoreGame:
                 False,
                 pd.Series(index=[f.name for f in fields(BoxscoreGame)]),
             ),
-            (BoxscoreGame(pk=0), True, pd.Series({"pk": 0})),
+            (BoxscoreGame(officials=dict()), True, pd.Series({"officials": {}})),
             (
-                BoxscoreGame(pk=0),
+                BoxscoreGame(officials=dict()),
                 False,
-                pd.Series({**{f.name: None for f in fields(BoxscoreGame)}, "pk": 0}),
+                pd.Series(
+                    {**{f.name: None for f in fields(BoxscoreGame)}, "officials": {}}
+                ),
             ),
         ],
         ids=[

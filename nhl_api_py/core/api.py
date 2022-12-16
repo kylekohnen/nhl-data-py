@@ -7,7 +7,7 @@ from requests import request
 
 from nhl_api_py.core.decorators import timing
 from nhl_api_py.core.error_exceptions import ResponseError
-from nhl_api_py.core.models import Play, Team, GeneralGame, BoxscoreGame
+from nhl_api_py.core.models import BoxscoreGame, GeneralGame, Play, Team
 from nhl_api_py.core.response import Response
 
 logger = logging.getLogger(__name__)
@@ -110,7 +110,7 @@ class NhlApi:
         game_id: int,
         boxscore: bool = False,
         linescore: bool = False,
-    ) -> GeneralGame | BoxscoreGame:
+    ) -> GeneralGame | BoxscoreGame | Response:
         """
         Sends a GET request to retrieve game data from the NHL API.
 
@@ -126,7 +126,7 @@ class NhlApi:
         :param game_id: the ID of the specific game for which we want to see data.
         :param boxscore: whether the response should return the boxscore for the game.
         :param linescore: whether the response should return the linescore for the game.
-        :return: GeneralGame or LinscoreGame model.
+        :return: GeneralGame or BoxscoreGame model (LinescoreGame to-be-implemented).
         """
         logger.debug((game_id, boxscore, linescore))
 
@@ -136,14 +136,18 @@ class NhlApi:
         games_endpoint = "game/" + str(game_id)
         if boxscore:
             games_endpoint += "/boxscore"
-            resp: BoxscoreGame = self.get(games_endpoint)
+            response = self.get(games_endpoint)
+            data = response.data
+            return BoxscoreGame.from_dict(data)
         elif linescore:
             games_endpoint += "/linescore"
-            resp: Response = self.get(games_endpoint)
+            return self.get(games_endpoint).data
         else:
             games_endpoint += "/feed/live"
-            resp: GeneralGame = self.get(games_endpoint)
-        return resp
+
+            response = self.get(games_endpoint)
+            data = response.data
+            return GeneralGame.from_dict(data)
 
     def plays(
         self,
