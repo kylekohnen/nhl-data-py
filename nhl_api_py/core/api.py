@@ -135,12 +135,15 @@ class NhlApi:
 
         games_endpoint = "game/" + str(game_id)
         if boxscore:
-            games_endpoint += "/boxscore"  # Returns BoxscoreGame
+            games_endpoint += "/boxscore"
+            resp: BoxscoreGame = self.get(games_endpoint)
         elif linescore:
             games_endpoint += "/linescore"
+            resp: Response = self.get(games_endpoint)
         else:
-            games_endpoint += "/feed/live"  # Returns GeneralGame
-        return self.get(games_endpoint)
+            games_endpoint += "/feed/live"
+            resp: GeneralGame = self.get(games_endpoint)
+        return resp
 
     def plays(
         self,
