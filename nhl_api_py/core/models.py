@@ -125,6 +125,74 @@ class Play(Model):
         return cls(**final_data)
 
 
+@dataclass
+class GeneralGame(Model):
+    """
+    Represents and contains all data for a given game, returned from the NHL API.
+    """
+
+    pk: Optional[int] = None
+    type: Optional[str] = None
+    date_time: Optional[str] = None
+    end_date_time: Optional[str] = None
+    abstract_game_state: Optional[str] = None
+    coded_game_state: Optional[str] = None
+    detailed_state: Optional[str] = None
+    status_code: Optional[str] = None
+    start_time_tbd: Optional[bool] = None
+    away: Optional[Team] = None
+    home: Optional[Team] = None
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        converted_data = convert_keys_to_snake_case(data)
+        # Extract nested data after top-level if it exists
+        top_level_data = _field_only_keys(converted_data, cls)
+        game_data = _field_only_keys(converted_data.get("game", dict()), cls)
+        datetime_data = _field_only_keys(converted_data.get("datetime", dict()), cls)
+        status_data = _field_only_keys(converted_data.get("status", dict()), cls)
+        teams_data = _field_only_keys(converted_data.get("teams", dict()), cls)
+        # Extract one nested dict further for teams data if it exists
+        away_data = _field_only_keys(teams_data.get("away", dict()), Team)
+        home_data = _field_only_keys(teams_data.get("home", dict()), Team)
+        away_data = Team.from_dict(away_data) if len(away_data) != 0 else None
+        home_data = Team.from_dict(home_data) if len(home_data) != 0 else None
+        final_data = {
+            **top_level_data,
+            **game_data,
+            **datetime_data,
+            **status_data,
+            "away": away_data,
+            "home": home_data,
+        }
+        return cls(**final_data)
+
+
+@dataclass
+class BoxscoreGame(Model):
+    """
+    Represents and contains boxscore data from a given game, returned from the NHL API.
+    """
+
+    pk: Optional[int] = None
+    away: Optional[Team] = None
+    home: Optional[Team] = None
+    officials: Optional[dict] = None  # It may be beneficial to make an officials class.
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        converted_data = convert_keys_to_snake_case(data)
+        # Extract nested data after top-level if it exists
+        teams_data = _field_only_keys(converted_data.get("teams", dict()), cls)
+        # Extract one nested dict further for teams data if it exists
+        away_data = _field_only_keys(teams_data.get("away", dict()), Team)
+        home_data = _field_only_keys(teams_data.get("home", dict()), Team)
+        away_data = Team.from_dict(away_data) if len(away_data) != 0 else None
+        home_data = Team.from_dict(home_data) if len(home_data) != 0 else None
+        final_data = {"away": away_data, "home": home_data}
+        return cls(**final_data)
+
+
 def _field_only_keys(data: dict, cls: Type[Model]) -> dict:
     """
     Helper function that extracts only the keys from a dictionary that is a

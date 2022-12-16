@@ -7,7 +7,7 @@ import pytest
 import responses
 
 from nhl_api_py.core.api import NhlApi, ResponseError
-from nhl_api_py.core.models import Team
+from nhl_api_py.core.models import Team, GeneralGame, BoxscoreGame
 
 
 class TestNhlApi:

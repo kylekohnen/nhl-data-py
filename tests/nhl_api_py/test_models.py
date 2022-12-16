@@ -3,7 +3,7 @@ from dataclasses import fields
 import pandas as pd
 import pytest
 
-from nhl_api_py.core.models import Play, Team
+from nhl_api_py.core.models import Play, Team, GeneralGame, BoxscoreGame
 
 
 class TestTeam:
@@ -97,4 +97,106 @@ class TestPlay:
     )
     def test_to_series(self, team_input, remove_na, expected):
         result = team_input.to_series(remove_missing_values=remove_na)
+        pd.testing.assert_series_equal(expected, result, check_dtype=False)
+
+
+class TestGeneralGame:
+    """
+    Tests the `nhl_api_py.core.models.GeneralGame` class
+    """
+
+    @pytest.mark.parametrize(
+        "input, expected",
+        [
+            (dict(), GeneralGame()),
+            ({"game": {"pk": 0}}, GeneralGame(pk=0)),
+            ({"game": {"nonExistentField": "f"}}, GeneralGame()),
+            ({"teams": {"away": {"id": 1}}}, GeneralGame(away=Team(id=1))),
+        ],
+        ids=[
+            "missing_parameters",
+            "nested_expected_attr",
+            "nested_nonreal_attr",
+            "teams_created",
+        ],
+    )
+    def test_from_dict(self, input, expected):
+        result = GeneralGame.from_dict(input)
+        assert expected == result
+
+    @pytest.mark.parametrize(
+        "game_input, remove_na, expected",
+        [
+            (GeneralGame(), True, pd.Series()),
+            (
+                GeneralGame(),
+                False,
+                pd.Series(index=[f.name for f in fields(GeneralGame)]),
+            ),
+            (GeneralGame(pk=0), True, pd.Series({"pk": 0})),
+            (
+                GeneralGame(pk=0),
+                False,
+                pd.Series({**{f.name: None for f in fields(GeneralGame)}, "pk": 0}),
+            ),
+        ],
+        ids=[
+            "empty_remove_na",
+            "empty_keep_na",
+            "one_kwarg_remove_na",
+            "one_kwarg_keep_na",
+        ],
+    )
+    def test_to_series(self, game_input, remove_na, expected):
+        result = game_input.to_series(remove_missing_values=remove_na)
+        pd.testing.assert_series_equal(expected, result, check_dtype=False)
+
+
+class TestBoxscoreGame:
+    """
+    Tests the `nhl_api_py.core.models.BoxscoreGame` class
+    """
+
+    @pytest.mark.parametrize(
+        "input, expected",
+        [
+            (dict(), BoxscoreGame()),
+            ({"officials": {}}, BoxscoreGame()),
+            ({"teams": {"away": {"id": 1}}}, BoxscoreGame(away=Team(id=1))),
+        ],
+        ids=[
+            "missing_parameters",
+            "empty_dict",
+            "teams_created",
+        ],
+    )
+    def test_from_dict(self, input, expected):
+        result = BoxscoreGame.from_dict(input)
+        assert expected == result
+
+    @pytest.mark.parametrize(
+        "game_input, remove_na, expected",
+        [
+            (BoxscoreGame(), True, pd.Series()),
+            (
+                BoxscoreGame(),
+                False,
+                pd.Series(index=[f.name for f in fields(BoxscoreGame)]),
+            ),
+            (BoxscoreGame(pk=0), True, pd.Series({"pk": 0})),
+            (
+                BoxscoreGame(pk=0),
+                False,
+                pd.Series({**{f.name: None for f in fields(BoxscoreGame)}, "pk": 0}),
+            ),
+        ],
+        ids=[
+            "empty_remove_na",
+            "empty_keep_na",
+            "one_kwarg_remove_na",
+            "one_kwarg_keep_na",
+        ],
+    )
+    def test_to_series(self, game_input, remove_na, expected):
+        result = game_input.to_series(remove_missing_values=remove_na)
         pd.testing.assert_series_equal(expected, result, check_dtype=False)
