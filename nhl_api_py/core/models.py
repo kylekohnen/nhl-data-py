@@ -67,7 +67,7 @@ class Team(Model):
     division: Optional[dict] = None
     conference: Optional[dict] = None
     franchise: Optional[dict] = None
-    team_status: Optional[dict] = None
+    team_stats: Optional[dict] = None
     roster: Optional[dict] = None
     short_name: Optional[str] = None
     official_site_url: Optional[str] = None
