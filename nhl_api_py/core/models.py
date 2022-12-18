@@ -132,7 +132,6 @@ class Game(Model):
     """
 
     # gameData
-    # game
     pk: Optional[int] = None
     season: Optional[str] = None
     type: Optional[str] = None
@@ -224,10 +223,10 @@ class Boxscore(Model):
         away_data = teams_data.get("away", dict())
         home_data = teams_data.get("home", dict())
         # Get teams
-        away_team_id = away_data.get("team", dict()).get("id", None)
-        home_team_id = home_data.get("team", dict()).get("id", None)
-        away_team = Team(id=away_team_id) if away_team_id is not None else None
-        home_team = Team(id=away_team_id) if home_team_id is not None else None
+        away_team_kwargs = away_data.get("team", dict())
+        home_team_kwargs = home_data.get("team", dict())
+        away_team = Team(**away_team_kwargs) if away_team_kwargs != dict() else None
+        home_team = Team(**home_team_kwargs) if home_team_kwargs != dict() else None
         # Extract one nested dict further for teams data if it exists
         away_data = append_string_to_keys("away_", away_data)
         home_data = append_string_to_keys("home_", home_data)
