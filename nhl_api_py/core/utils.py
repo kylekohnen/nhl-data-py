@@ -22,3 +22,18 @@ def convert_keys_to_snake_case(d: dict) -> dict:
         else:
             new_data[new_key] = v
     return new_data
+
+
+def append_string_to_keys(text: str, d: dict) -> dict:
+    """
+    Appends a string to the top level keys of a dictionary.
+
+    :param text: the text you want to append
+    :param d: the dictionary we want to convert keys for
+    :return: the same dictionary with converted keys
+    """
+    new_data = {}
+    for key, data in d.items():
+        new_key = text + key
+        new_data[new_key] = data
+    return new_data

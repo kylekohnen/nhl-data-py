@@ -3,7 +3,7 @@ from dataclasses import fields
 import pandas as pd
 import pytest
 
-from nhl_api_py.core.models import BoxscoreGame, GeneralGame, Play, Team
+from nhl_api_py.core.models import Boxscore, Game, Play, Team
 
 
 class TestTeam:
@@ -100,20 +100,20 @@ class TestPlay:
         pd.testing.assert_series_equal(expected, result, check_dtype=False)
 
 
-class TestGeneralGame:
+class TestGame:
     """
-    Tests the `nhl_api_py.core.models.GeneralGame` class
+    Tests the `nhl_api_py.core.models.Game` class
     """
 
     @pytest.mark.parametrize(
         "input, expected",
         [
-            (dict(), GeneralGame()),
-            ({"gameData": {"game": {"pk": 0}}}, GeneralGame(pk=0)),
-            ({"gameData": {"game": {"nonExistentField": "f"}}}, GeneralGame()),
+            (dict(), Game()),
+            ({"gameData": {"game": {"pk": 0}}}, Game(pk=0)),
+            ({"gameData": {"game": {"nonExistentField": "f"}}}, Game()),
             (
                 {"GameData": {"teams": {"away": {"id": 1}}}},
-                GeneralGame(away=Team(id=1)),
+                Game(away=Team(id=1)),
             ),
         ],
         ids=[
@@ -124,23 +124,23 @@ class TestGeneralGame:
         ],
     )
     def test_from_dict(self, input, expected):
-        result = GeneralGame.from_dict(input)
+        result = Game.from_dict(input)
         assert expected == result
 
     @pytest.mark.parametrize(
         "game_input, remove_na, expected",
         [
-            (GeneralGame(), True, pd.Series()),
+            (Game(), True, pd.Series()),
             (
-                GeneralGame(),
+                Game(),
                 False,
-                pd.Series(index=[f.name for f in fields(GeneralGame)]),
+                pd.Series(index=[f.name for f in fields(Game)]),
             ),
-            (GeneralGame(pk=0), True, pd.Series({"pk": 0})),
+            (Game(pk=0), True, pd.Series({"pk": 0})),
             (
-                GeneralGame(pk=0),
+                Game(pk=0),
                 False,
-                pd.Series({**{f.name: None for f in fields(GeneralGame)}, "pk": 0}),
+                pd.Series({**{f.name: None for f in fields(Game)}, "pk": 0}),
             ),
         ],
         ids=[
@@ -155,43 +155,49 @@ class TestGeneralGame:
         pd.testing.assert_series_equal(expected, result, check_dtype=False)
 
 
-class TestBoxscoreGame:
+class TestBoxscore:
     """
-    Tests the `nhl_api_py.core.models.BoxscoreGame` class
+    Tests the `nhl_api_py.core.models.Boxscore` class
     """
 
     @pytest.mark.parametrize(
         "input, expected",
         [
-            (dict(), BoxscoreGame()),
-            ({"officials": {}}, BoxscoreGame(officials={})),
-            ({"teams": {"away": {"id": 1}}}, BoxscoreGame(away=Team(id=1))),
+            (dict(), Boxscore()),
+            (
+                {"teams": {"away": {"teamStats": dict()}}},
+                Boxscore(away_team_stats=dict()),
+            ),
+            (
+                {"teams": {"away": {"team": {"id": 1}}}},
+                Boxscore(away_team=Team(id=1)),
+            ),
         ],
         ids=[
             "missing_parameters",
-            "empty_dict",
+            "empty_attribute",
             "teams_created",
         ],
     )
     def test_from_dict(self, input, expected):
-        result = BoxscoreGame.from_dict(input)
+        result = Boxscore.from_dict(input)
         assert expected == result
 
     @pytest.mark.parametrize(
         "game_input, remove_na, expected",
         [
-            (BoxscoreGame(), True, pd.Series()),
+            (Boxscore(), True, pd.Series()),
             (
-                BoxscoreGame(),
+                Boxscore(),
                 False,
-                pd.Series(index=[f.name for f in fields(BoxscoreGame)]),
+                pd.Series(index=[f.name for f in fields(Boxscore)]),
             ),
-            (BoxscoreGame(officials=dict()), True, pd.Series({"officials": {}})),
+            (Boxscore(away_on_ice=[1]), True, pd.Series({"away_on_ice": [1]})),
             (
-                BoxscoreGame(officials=dict()),
+                Boxscore(away_on_ice=[1]),
                 False,
                 pd.Series(
-                    {**{f.name: None for f in fields(BoxscoreGame)}, "officials": {}}
+                    {**{f.name: None for f in fields(Boxscore)}, "away_on_ice": [1]}
                 ),
             ),
         ],

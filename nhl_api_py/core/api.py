@@ -7,7 +7,7 @@ from requests import request
 
 from nhl_api_py.core.decorators import timing
 from nhl_api_py.core.error_exceptions import ResponseError
-from nhl_api_py.core.models import BoxscoreGame, GeneralGame, Play, Team
+from nhl_api_py.core.models import Boxscore, Game, Play, Team
 from nhl_api_py.core.response import Response
 
 logger = logging.getLogger(__name__)
@@ -108,46 +108,34 @@ class NhlApi:
     def game(
         self,
         game_id: int,
-        boxscore: bool = False,
-        linescore: bool = False,
-    ) -> GeneralGame | BoxscoreGame | Response:
+    ) -> Game:
         """
         Sends a GET request to retrieve game data from the NHL API.
 
-        If `boxscore` is True, the response will contain only the boxscore.
+        :param game_id: the ID of the specific game for which we want to see data.
+        :return: Game model.
+        """
+        logger.debug((game_id))
 
-        If `linescore` is True, the response will contain only the linescore.
+        games_endpoint = "game/" + str(game_id) + "/feed/live"
+        response = self.get(games_endpoint)
+        return Game.from_dict(response.data)
 
-        `linescore` and `boxscore` may not both be True.
-
-        If neither `linescore` nor `boxscore` are passed, the response will
-        contain all of the data for the specified game.
+    def boxscore(
+        self,
+        game_id: int,
+    ) -> Boxscore:
+        """
+        Sends a GET request to retrieve boxscore data from the NHL API.
 
         :param game_id: the ID of the specific game for which we want to see data.
-        :param boxscore: whether the response should return the boxscore for the game.
-        :param linescore: whether the response should return the linescore for the game.
-        :return: GeneralGame or BoxscoreGame model (LinescoreGame to-be-implemented).
+        :return: Boxscore model.
         """
-        logger.debug((game_id, boxscore, linescore))
+        logger.debug((game_id))
 
-        if boxscore and linescore:
-            raise ValueError("You may request boxscore or linescore, not both.")
-
-        games_endpoint = "game/" + str(game_id)
-        if boxscore:
-            games_endpoint += "/boxscore"
-            response = self.get(games_endpoint)
-            data = response.data
-            return BoxscoreGame.from_dict(data)
-        elif linescore:
-            games_endpoint += "/linescore"
-            return self.get(games_endpoint).data
-        else:
-            games_endpoint += "/feed/live"
-
-            response = self.get(games_endpoint)
-            data = response.data
-            return GeneralGame.from_dict(data)
+        games_endpoint = "game/" + str(game_id) + "/boxscore"
+        response = self.get(games_endpoint)
+        return Boxscore.from_dict(response.data)
 
     def plays(
         self,
@@ -155,7 +143,37 @@ class NhlApi:
         scoring_plays_only: bool = False,
         penalty_plays_only: bool = False,
     ) -> list[Play]:
-        # Call Games Method (raising NotImplementedError for now)
-        # Extract Plays from Game Model
-        # Use kwargs to do filtering
-        raise NotImplementedError
+        """
+        Sends a GET request to retrieve plays data from the NHL API.
+
+        :param game_id: the ID of the specific game for which we want to see data.
+        :param scoring_plays_only: whether the response contains only scoring plays.
+        :param penalty_plays_only: whether the response contains only penalty plays.
+        :return: list of Play model.
+        """
+        if scoring_plays_only and penalty_plays_only:
+            raise ValueError(
+                "You may request scoring plays or penalty plays, but not both."
+            )
+        response = self.game(game_id=game_id)
+        response = response.plays
+        data = response.get("all_plays", [])
+        if len(data) == 0:
+            logger.warning(
+                "Response Data did not have proper plays data. "
+                + "Either the `plays` key was missing, game_id was invalid, "
+                + "or no data exists."
+            )
+            logger.debug(response)
+            return Play()
+        if scoring_plays_only:
+            scoring_play = response.get("scoring_plays", dict())
+            if scoring_play == []:
+                return Play()
+            return [Play.from_dict(data[play_entry]) for play_entry in scoring_play]
+        if penalty_plays_only:
+            penalty_play = response.get("penalty_plays", dict())
+            if penalty_play == []:
+                return Play()
+            return [Play.from_dict(data[play_entry]) for play_entry in penalty_play]
+        return [Play.from_dict(play_entry) for play_entry in data]
