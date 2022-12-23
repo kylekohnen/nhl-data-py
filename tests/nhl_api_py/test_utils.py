@@ -1,10 +1,6 @@
 import pytest
 
-from nhl_api_py.core.utils import (
-    append_string_to_keys,
-    camel_to_snake_case,
-    convert_keys_to_snake_case,
-)
+from nhl_api_py.core.utils import camel_to_snake_case, convert_keys_to_snake_case
 
 
 @pytest.mark.parametrize(
@@ -39,24 +35,4 @@ def test_camel_to_snake_case(test_value, expected):
 )
 def test_convert_keys_to_snake_case(test_value, expected):
     result = convert_keys_to_snake_case(test_value)
-    assert expected == result
-
-
-@pytest.mark.parametrize(
-    "test_value, expected",
-    [
-        (dict(), dict()),
-        (
-            {"key1": None, "key2": None},
-            {"append_key1": None, "append_key2": None},
-        ),
-        (
-            {"key1": {"nested1": None, "nested2": None}},
-            {"append_key1": {"nested1": None, "nested2": None}},
-        ),
-    ],
-    ids=["empty_dict", "normal_level", "nested_dict"],
-)
-def test_append_string_to_keys(test_value, expected):
-    result = append_string_to_keys("append_", test_value)
     assert expected == result

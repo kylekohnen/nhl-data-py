@@ -115,7 +115,7 @@ class NhlApi:
         :param game_id: the ID of the specific game for which we want to see data.
         :return: Game model.
         """
-        logger.debug((game_id))
+        logger.debug(game_id)
 
         games_endpoint = "game/" + str(game_id) + "/feed/live"
         response = self.get(games_endpoint)
@@ -165,15 +165,15 @@ class NhlApi:
                 + "or no data exists."
             )
             logger.debug(response)
-            return Play()
+            return []
         if scoring_plays_only:
             scoring_play = response.get("scoring_plays", dict())
             if scoring_play == []:
-                return Play()
+                return []
             return [Play.from_dict(data[play_entry]) for play_entry in scoring_play]
         if penalty_plays_only:
             penalty_play = response.get("penalty_plays", dict())
             if penalty_play == []:
-                return Play()
+                return []
             return [Play.from_dict(data[play_entry]) for play_entry in penalty_play]
         return [Play.from_dict(play_entry) for play_entry in data]

@@ -150,8 +150,6 @@ class TestNhlApi:
             result = NhlApi().game(game_id=2017020001)
             assert result == expected
 
-    ###
-    ###
     @responses.activate
     @pytest.mark.parametrize(
         "status, status_error",
@@ -219,14 +217,22 @@ class TestNhlApi:
     @pytest.mark.parametrize(
         "resp_data, expected",
         [
-            ({"liveData": {"plays": dict()}}, Play()),
+            ({"liveData": {"plays": dict()}}, []),
             (
-                {"liveData": {"plays": {"0": {"result": {"event": None}}}}},
-                Play(event=None),
+                {
+                    "liveData": {
+                        "plays": {
+                            "allPlays": [{"result": {"event": None}}],
+                            "scoringPlays": [0],
+                            "penaltyPlays": [0],
+                        }
+                    }
+                },
+                [Play(event=None)],
             ),
             (
-                {"liveData": {"plays": {"0": {"result": {"not_valid_key": "f"}}}}},
-                Play(),
+                {"liveData": {"plays": {"result": {"not_valid_key": "f"}}}},
+                [],
             ),
             (
                 {
@@ -247,7 +253,7 @@ class TestNhlApi:
         ids=[
             "empty_data_with_play_key",
             "play_with_data",
-            "team_with_unknown_key",
+            "play_with_unknown_key",
             "play_with_nested_dict",
         ],
     )
