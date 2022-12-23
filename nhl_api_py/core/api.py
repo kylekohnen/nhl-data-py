@@ -131,7 +131,7 @@ class NhlApi:
         :param game_id: the ID of the specific game for which we want to see data.
         :return: Boxscore model.
         """
-        logger.debug((game_id))
+        logger.debug(game_id)
 
         games_endpoint = "game/" + str(game_id) + "/boxscore"
         response = self.get(games_endpoint)
@@ -147,14 +147,12 @@ class NhlApi:
         Sends a GET request to retrieve plays data from the NHL API.
 
         :param game_id: the ID of the specific game for which we want to see data.
-        :param scoring_plays_only: whether the response contains only scoring plays.
-        :param penalty_plays_only: whether the response contains only penalty plays.
+        :param scoring_plays_only: whether the response contains scoring plays.
+        :param penalty_plays_only: whether the response contains penalty plays.
         :return: list of Play model.
         """
-        if scoring_plays_only and penalty_plays_only:
-            raise ValueError(
-                "You may request scoring plays or penalty plays, but not both."
-            )
+        logger.debug((game_id, scoring_plays_only, penalty_plays_only))
+
         response = self.game(game_id=game_id)
         response = response.plays
         data = response.get("all_plays", [])
@@ -166,14 +164,17 @@ class NhlApi:
             )
             logger.debug(response)
             return []
+        if not scoring_plays_only and not penalty_plays_only:
+            return [Play.from_dict(play_entry) for play_entry in data]
+        play_data = []
         if scoring_plays_only:
             scoring_play = response.get("scoring_plays", dict())
-            if scoring_play == []:
-                return []
-            return [Play.from_dict(data[play_entry]) for play_entry in scoring_play]
+            play_data.append(
+                [Play.from_dict(data[play_entry]) for play_entry in scoring_play]
+            )
         if penalty_plays_only:
             penalty_play = response.get("penalty_plays", dict())
-            if penalty_play == []:
-                return []
-            return [Play.from_dict(data[play_entry]) for play_entry in penalty_play]
-        return [Play.from_dict(play_entry) for play_entry in data]
+            play_data.append(
+                [Play.from_dict(data[play_entry]) for play_entry in penalty_play]
+            )
+        return [item for sublist in play_data for item in sublist]

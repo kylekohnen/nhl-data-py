@@ -205,20 +205,12 @@ class TestNhlApi:
         ids=["status=200", "status=300", "status=400", "status=500"],
     )
     @pytest.mark.parametrize(
-        "scoring_plays_only, penalty_plays_only, plays_error",
+        "scoring_plays_only, penalty_plays_only, resp_data, expected",
         [
-            (False, False, nullcontext()),
-            (False, True, nullcontext()),
-            (True, False, nullcontext()),
-            (True, True, pytest.raises(ValueError)),
-        ],
-        ids=["all_plays", "penalty_plays", "scoring_plays", "scoring_penalty"],
-    )
-    @pytest.mark.parametrize(
-        "resp_data, expected",
-        [
-            ({"liveData": {"plays": dict()}}, []),
+            (False, False, {"liveData": {"plays": dict()}}, []),
             (
+                False,
+                False,
                 {
                     "liveData": {
                         "plays": {
@@ -231,10 +223,14 @@ class TestNhlApi:
                 [Play(event=None)],
             ),
             (
+                False,
+                False,
                 {"liveData": {"plays": {"result": {"not_valid_key": "f"}}}},
                 [],
             ),
             (
+                False,
+                False,
                 {
                     "liveData": {
                         "plays": {
@@ -242,8 +238,59 @@ class TestNhlApi:
                                 {"result": {"event": "event0"}},
                                 {"result": {"event": "event1"}},
                             ],
-                            "scoringPlays": [0, 1],
-                            "penaltyPlays": [0, 1],
+                            "scoringPlays": [0],
+                            "penaltyPlays": [1],
+                        }
+                    }
+                },
+                [Play(event="event0"), Play(event="event1")],
+            ),
+            (
+                False,
+                True,
+                {
+                    "liveData": {
+                        "plays": {
+                            "allPlays": [
+                                {"result": {"event": "event0"}},
+                                {"result": {"event": "event1"}},
+                            ],
+                            "scoringPlays": [0],
+                            "penaltyPlays": [1],
+                        }
+                    }
+                },
+                [Play(event="event1")],
+            ),
+            (
+                True,
+                False,
+                {
+                    "liveData": {
+                        "plays": {
+                            "allPlays": [
+                                {"result": {"event": "event0"}},
+                                {"result": {"event": "event1"}},
+                            ],
+                            "scoringPlays": [0],
+                            "penaltyPlays": [1],
+                        }
+                    }
+                },
+                [Play(event="event0")],
+            ),
+            (
+                True,
+                True,
+                {
+                    "liveData": {
+                        "plays": {
+                            "allPlays": [
+                                {"result": {"event": "event0"}},
+                                {"result": {"event": "event1"}},
+                            ],
+                            "scoringPlays": [0],
+                            "penaltyPlays": [1],
                         }
                     }
                 },
@@ -251,10 +298,13 @@ class TestNhlApi:
             ),
         ],
         ids=[
-            "empty_data_with_play_key",
-            "play_with_data",
-            "play_with_unknown_key",
-            "play_with_nested_dict",
+            "play_data_missing",
+            "play_data_empty",
+            "play_data_invalid_key",
+            "get_all_plays",
+            "get_penalty_plays",
+            "get_scoring_plays",
+            "get_penalty_scoring_plays",
         ],
     )
     def test_plays(
@@ -263,7 +313,6 @@ class TestNhlApi:
         status_error,
         scoring_plays_only,
         penalty_plays_only,
-        plays_error,
         resp_data,
         expected,
     ):
@@ -272,11 +321,10 @@ class TestNhlApi:
             status=status,
             json=resp_data,
         )
-        with plays_error:
-            with status_error:
-                result = NhlApi().plays(
-                    game_id=2017020001,
-                    scoring_plays_only=scoring_plays_only,
-                    penalty_plays_only=penalty_plays_only,
-                )
-                assert result == expected
+        with status_error:
+            result = NhlApi().plays(
+                game_id=2017020001,
+                scoring_plays_only=scoring_plays_only,
+                penalty_plays_only=penalty_plays_only,
+            )
+            assert result == expected
