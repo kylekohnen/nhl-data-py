@@ -145,7 +145,12 @@ class Game(Model):
     home: Optional[Team] = None
     players: Optional[dict] = None
     venue: Optional[dict] = None
-    plays: Optional[dict] = None
+    all_plays: Optional[list[Play]] = None
+    scoring_plays: Optional[list] = None
+    penalty_plays: Optional[list] = None
+    plays_by_period: Optional[list] = None
+    current_play: Optional[dict] = None
+    decisions: Optional[dict] = None
 
     @classmethod
     def from_dict(cls, data: dict):
@@ -162,14 +167,23 @@ class Game(Model):
         away_data = Team.from_dict(away_data) if len(away_data) != 0 else None
         home_data = _field_only_keys(teams_data.get("home", dict()), Team)
         home_data = Team.from_dict(home_data) if len(home_data) != 0 else None
+        play_data = live_data.get("plays", dict())
+        play_data_kwargs = play_data.pop("all_plays", dict())
+        all_plays = [
+            Play.from_dict(play) if play_data_kwargs is not None else None
+            for play in play_data_kwargs
+        ]
+        all_plays = None if all_plays == [] else all_plays
         final_data = {
             **top_level_game_data,
             **top_level_live_data,
             **game,
             **datetime_data,
             **status_data,
+            **play_data,
             "away": away_data,
             "home": home_data,
+            "all_plays": all_plays,
         }
         return cls(**final_data)
 
@@ -247,7 +261,8 @@ def _append_string_to_keys(text: str, d: dict) -> dict:
     :param d: the dictionary we want to convert keys for
     :return: the same dictionary with converted keys
     """
-    for key, _ in list(d.items()):
+    for key in list(d):
+        # for key in d:
         new_key = text + key
         d[new_key] = d.pop(key)
     return d

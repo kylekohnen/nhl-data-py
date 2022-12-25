@@ -225,12 +225,6 @@ class TestNhlApi:
             (
                 False,
                 False,
-                {"liveData": {"plays": {"result": {"not_valid_key": "f"}}}},
-                [],
-            ),
-            (
-                False,
-                False,
                 {
                     "liveData": {
                         "plays": {
@@ -300,7 +294,6 @@ class TestNhlApi:
         ids=[
             "play_data_missing",
             "play_data_empty",
-            "play_data_invalid_key",
             "get_all_plays",
             "get_penalty_plays",
             "get_scoring_plays",

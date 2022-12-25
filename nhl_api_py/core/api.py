@@ -154,9 +154,8 @@ class NhlApi:
         logger.debug((game_id, scoring_plays_only, penalty_plays_only))
 
         response = self.game(game_id=game_id)
-        response = response.plays
-        data = response.get("all_plays", [])
-        if len(data) == 0:
+        data = response.all_plays
+        if data is None:
             logger.warning(
                 "Response Data did not have proper plays data. "
                 + "Either the `plays` key was missing, game_id was invalid, "
@@ -164,17 +163,10 @@ class NhlApi:
             )
             logger.debug(response)
             return []
-        if not scoring_plays_only and not penalty_plays_only:
-            return [Play.from_dict(play_entry) for play_entry in data]
-        play_data = []
-        if scoring_plays_only:
-            scoring_play = response.get("scoring_plays", dict())
-            play_data.append(
-                [Play.from_dict(data[play_entry]) for play_entry in scoring_play]
-            )
-        if penalty_plays_only:
-            penalty_play = response.get("penalty_plays", dict())
-            play_data.append(
-                [Play.from_dict(data[play_entry]) for play_entry in penalty_play]
-            )
-        return [item for sublist in play_data for item in sublist]
+        plays_to_return = []
+        plays_to_return += response.scoring_plays if scoring_plays_only else []
+        plays_to_return += response.penalty_plays if penalty_plays_only else []
+        if len(plays_to_return) == 0:
+            return data
+        else:
+            return [data[play] for play in plays_to_return]
