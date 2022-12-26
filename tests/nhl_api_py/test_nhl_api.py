@@ -7,7 +7,7 @@ import pytest
 import responses
 
 from nhl_api_py.core.api import NhlApi, ResponseError
-from nhl_api_py.core.models import Team
+from nhl_api_py.core.models import Boxscore, Game, Play, Team
 
 
 class TestNhlApi:
@@ -122,31 +122,202 @@ class TestNhlApi:
         ids=["status=200", "status=300", "status=400", "status=500"],
     )
     @pytest.mark.parametrize(
-        "boxscore, linescore, game_error",
+        "resp_data, expected",
         [
-            (False, False, nullcontext()),
-            (False, True, nullcontext()),
-            (True, False, nullcontext()),
-            (True, True, pytest.raises(ValueError)),
+            ({"gameData": {"game": {"pk": None}}}, Game()),
+            ({"gameData": {"game": {"pk": 2017020001}}}, Game(pk=2017020001)),
+            ({"GameData": {"not_valid_key": "f"}}, Game()),
+        ],
+        ids=[
+            "empty_data_with_game_id",
+            "game_with_id",
+            "team_with_unknown_key",
         ],
     )
-    def test_games(self, status, status_error, boxscore, linescore, game_error):
-        if boxscore:
-            url = "boxscore"
-        elif linescore:
-            url = "linescore"
-        else:
-            url = "feed/live"
+    def test_game(
+        self,
+        status,
+        status_error,
+        resp_data,
+        expected,
+    ):
         responses.get(
-            f"{TestNhlApi.BASE_URL}/game/2017020001/" + url,
+            f"{TestNhlApi.BASE_URL}/game/2017020001/feed/live",
             status=status,
-            json={"game": "random_data_here"},
+            json=resp_data,
         )
-        with game_error:
-            with status_error:
-                resp = NhlApi().game(
-                    game_id=2017020001, boxscore=boxscore, linescore=linescore
-                )
-                assert resp.status_code == status and resp.data == {
-                    "game": "random_data_here"
-                }
+        with status_error:
+            result = NhlApi().game(game_id=2017020001)
+            assert result == expected
+
+    @responses.activate
+    @pytest.mark.parametrize(
+        "status, status_error",
+        [
+            (200, nullcontext()),
+            (300, nullcontext()),
+            (400, pytest.raises(ResponseError)),
+            (500, pytest.raises(ResponseError)),
+        ],
+        ids=["status=200", "status=300", "status=400", "status=500"],
+    )
+    @pytest.mark.parametrize(
+        "resp_data, expected",
+        [
+            (
+                {"teams": {"away": {"teamStats": dict()}}},
+                Boxscore(away_team_stats=dict()),
+            ),
+            ({"not_valid_key": "f"}, Boxscore()),
+            ({"teams": {"away": {"team": {"id": 1}}}}, Boxscore(away_team=Team(id=1))),
+        ],
+        ids=[
+            "empty_data",
+            "team_with_unknown_key",
+            "team_created",
+        ],
+    )
+    def test_boxscore(
+        self,
+        status,
+        status_error,
+        resp_data,
+        expected,
+    ):
+        responses.get(
+            f"{TestNhlApi.BASE_URL}/game/2017020001/boxscore",
+            status=status,
+            json=resp_data,
+        )
+        with status_error:
+            result = NhlApi().boxscore(game_id=2017020001)
+            assert result == expected
+
+    @responses.activate
+    @pytest.mark.parametrize(
+        "status, status_error",
+        [
+            (200, nullcontext()),
+            (300, nullcontext()),
+            (400, pytest.raises(ResponseError)),
+            (500, pytest.raises(ResponseError)),
+        ],
+        ids=["status=200", "status=300", "status=400", "status=500"],
+    )
+    @pytest.mark.parametrize(
+        "scoring_plays_only, penalty_plays_only, resp_data, expected",
+        [
+            (False, False, {"liveData": {"plays": dict()}}, []),
+            (
+                False,
+                False,
+                {
+                    "liveData": {
+                        "plays": {
+                            "allPlays": [{"result": {"event": None}}],
+                            "scoringPlays": [0],
+                            "penaltyPlays": [0],
+                        }
+                    }
+                },
+                [Play(event=None)],
+            ),
+            (
+                False,
+                False,
+                {
+                    "liveData": {
+                        "plays": {
+                            "allPlays": [
+                                {"result": {"event": "event0"}},
+                                {"result": {"event": "event1"}},
+                            ],
+                            "scoringPlays": [0],
+                            "penaltyPlays": [1],
+                        }
+                    }
+                },
+                [Play(event="event0"), Play(event="event1")],
+            ),
+            (
+                False,
+                True,
+                {
+                    "liveData": {
+                        "plays": {
+                            "allPlays": [
+                                {"result": {"event": "event0"}},
+                                {"result": {"event": "event1"}},
+                            ],
+                            "scoringPlays": [0],
+                            "penaltyPlays": [1],
+                        }
+                    }
+                },
+                [Play(event="event1")],
+            ),
+            (
+                True,
+                False,
+                {
+                    "liveData": {
+                        "plays": {
+                            "allPlays": [
+                                {"result": {"event": "event0"}},
+                                {"result": {"event": "event1"}},
+                            ],
+                            "scoringPlays": [0],
+                            "penaltyPlays": [1],
+                        }
+                    }
+                },
+                [Play(event="event0")],
+            ),
+            (
+                True,
+                True,
+                {
+                    "liveData": {
+                        "plays": {
+                            "allPlays": [
+                                {"result": {"event": "event0"}},
+                                {"result": {"event": "event1"}},
+                            ],
+                            "scoringPlays": [0],
+                            "penaltyPlays": [1],
+                        }
+                    }
+                },
+                [Play(event="event0"), Play(event="event1")],
+            ),
+        ],
+        ids=[
+            "play_data_missing",
+            "play_data_empty",
+            "get_all_plays",
+            "get_penalty_plays",
+            "get_scoring_plays",
+            "get_penalty_scoring_plays",
+        ],
+    )
+    def test_plays(
+        self,
+        status,
+        status_error,
+        scoring_plays_only,
+        penalty_plays_only,
+        resp_data,
+        expected,
+    ):
+        responses.get(
+            f"{TestNhlApi.BASE_URL}/game/2017020001/feed/live",
+            status=status,
+            json=resp_data,
+        )
+        with status_error:
+            result = NhlApi().plays(
+                game_id=2017020001,
+                scoring_plays_only=scoring_plays_only,
+                penalty_plays_only=penalty_plays_only,
+            )
+            assert result == expected
