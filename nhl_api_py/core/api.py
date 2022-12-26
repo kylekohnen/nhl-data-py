@@ -158,8 +158,7 @@ class NhlApi:
         if data is None:
             logger.warning(
                 "Response Data did not have proper plays data. "
-                + "Either the `plays` key was missing, game_id was invalid, "
-                + "or no data exists."
+                + "Either the `game_id` was invalid or no data exists."
             )
             logger.debug(response)
             return []
@@ -169,4 +168,4 @@ class NhlApi:
         if len(plays_to_return) == 0:
             return data
         else:
-            return [data[play] for play in plays_to_return]
+            return [data[play_index] for play_index in plays_to_return]

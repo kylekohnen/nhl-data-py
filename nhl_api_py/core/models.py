@@ -149,7 +149,7 @@ class Game(Model):
     scoring_plays: Optional[list] = None
     penalty_plays: Optional[list] = None
     plays_by_period: Optional[list] = None
-    current_play: Optional[dict] = None
+    current_play: Optional[Play] = None
     decisions: Optional[dict] = None
 
     @classmethod
@@ -174,6 +174,8 @@ class Game(Model):
             for play in play_data_kwargs
         ]
         all_plays = None if all_plays == [] else all_plays
+        current_play = play_data.get("current_play", dict())
+        current_play = Play.from_dict(current_play) if current_play != dict() else None
         final_data = {
             **top_level_game_data,
             **top_level_live_data,
@@ -184,6 +186,7 @@ class Game(Model):
             "away": away_data,
             "home": home_data,
             "all_plays": all_plays,
+            "current_play": current_play,
         }
         return cls(**final_data)
 
@@ -261,8 +264,8 @@ def _append_string_to_keys(text: str, d: dict) -> dict:
     :param d: the dictionary we want to convert keys for
     :return: the same dictionary with converted keys
     """
+    # Keys are being changed, so loop over a copy of d instead of d itself.
     for key in list(d):
-        # for key in d:
         new_key = text + key
         d[new_key] = d.pop(key)
     return d
