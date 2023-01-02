@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 
-from nhl_api_py.core.models import Model
+from nhl_api_py.models.base import Model
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
