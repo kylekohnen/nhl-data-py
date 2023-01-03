@@ -9,6 +9,7 @@ from nhl_api_py.core.decorators import timing
 from nhl_api_py.core.error_exceptions import ResponseError
 from nhl_api_py.core.response import Response
 from nhl_api_py.models.game import Boxscore, Game, Play
+from nhl_api_py.models.schedule import ScheduleDate
 from nhl_api_py.models.team import Team
 
 logger = logging.getLogger(__name__)
@@ -152,8 +153,6 @@ class NhlApi:
         :param penalty_plays_only: whether the response contains penalty plays.
         :return: list of Play model.
         """
-        logger.debug((game_id, scoring_plays_only, penalty_plays_only))
-
         response = self.game(game_id=game_id)
         data = response.all_plays
         if data is None:
@@ -170,3 +169,13 @@ class NhlApi:
             return data
         else:
             return [data[play_index] for play_index in plays_to_return]
+
+    def schedule(self) -> list[ScheduleDate]:
+        """
+        Sends a GET request to retrieve a schedule of games/events for a
+        specified date range.
+        """
+        schedule_endpoint = "/schedule"
+        response = self.get(schedule_endpoint)
+        all_dates = response.data.get("dates", [])
+        return [ScheduleDate.from_dict(date) for date in all_dates]
