@@ -8,6 +8,7 @@ import responses
 
 from nhl_api_py.core.api import NhlApi, ResponseError
 from nhl_api_py.models.game import Boxscore, Game, Play
+from nhl_api_py.models.schedule import ScheduleDate
 from nhl_api_py.models.team import Team
 
 
@@ -322,3 +323,21 @@ class TestNhlApi:
                 penalty_plays_only=penalty_plays_only,
             )
             assert result == expected
+
+    @responses.activate
+    @pytest.mark.parametrize(
+        "resp_data, expected",
+        [
+            (dict(), []),
+            ({"dates": [dict(), dict()]}, [ScheduleDate(), ScheduleDate()]),
+            (
+                {"dates": [{"date": "2000-01-01", "totalItems": 1000}]},
+                [ScheduleDate(date="2000-01-01", total_items=1000)],
+            ),
+        ],
+        ids=["no_dates", "two_empty_dates", "some_parameters_filled"],
+    )
+    def test_schedule(self, resp_data, expected):
+        responses.get(f"{TestNhlApi.BASE_URL}/schedule", status=200, json=resp_data)
+        result = NhlApi().schedule()
+        assert result == expected
