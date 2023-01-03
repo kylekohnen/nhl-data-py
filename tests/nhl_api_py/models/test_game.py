@@ -9,7 +9,7 @@ from nhl_api_py.models.team import Team
 
 class TestPlay:
     """
-    Tests the `nhl_api_py.core.models.Play` class
+    Tests the `nhl_api_py.models.game.Play` class
     """
 
     @pytest.mark.parametrize(
@@ -59,7 +59,7 @@ class TestPlay:
 
 class TestGame:
     """
-    Tests the `nhl_api_py.core.models.Game` class
+    Tests the `nhl_api_py.models.game.Game` class
     """
 
     @pytest.mark.parametrize(
@@ -114,7 +114,7 @@ class TestGame:
 
 class TestBoxscore:
     """
-    Tests the `nhl_api_py.core.models.Boxscore` class
+    Tests the `nhl_api_py.models.game.Boxscore` class
     """
 
     @pytest.mark.parametrize(
