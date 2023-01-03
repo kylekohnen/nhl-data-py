@@ -2,13 +2,16 @@
 NHL API client.
 """
 import logging
+from typing import Iterable
 
 from requests import request
 
 from nhl_api_py.core.decorators import timing
 from nhl_api_py.core.error_exceptions import ResponseError
-from nhl_api_py.core.models import Boxscore, Game, Play, Team
 from nhl_api_py.core.response import Response
+from nhl_api_py.models.game import Boxscore, Game, Play
+from nhl_api_py.models.schedule import ScheduleDate
+from nhl_api_py.models.team import Team
 
 logger = logging.getLogger(__name__)
 
@@ -151,8 +154,6 @@ class NhlApi:
         :param penalty_plays_only: whether the response contains penalty plays.
         :return: list of Play model.
         """
-        logger.debug((game_id, scoring_plays_only, penalty_plays_only))
-
         response = self.game(game_id=game_id)
         data = response.all_plays
         if data is None:
@@ -169,3 +170,39 @@ class NhlApi:
             return data
         else:
             return [data[play_index] for play_index in plays_to_return]
+
+    def schedule(
+        self,
+        team_ids: list[int] | int = None,
+        season_start_year: int = None,
+        game_type: str = None,
+        date_range: Iterable[str] = None,
+    ) -> list[ScheduleDate]:
+        """
+        Sends a GET request to retrieve a schedule of games/events for a
+        specified date range.
+        By default, the API will specify the date range as the current date only.
+
+        :param team_ids: limits the schedule to the specific team(s) inserted
+        :param season_start_year: the start year of the specific NHL Season you want
+            to look at
+        :param game_type: limits the schedule to specific type of games, such as
+            regular season games ("R")
+        :param date_range: searches for games specified within a specific
+            range of dates
+        :return: a list of dates which keep info about the games played on a day
+        """
+        schedule_endpoint = "schedule?"
+        if team_ids:
+            team_ids = [team_ids] if isinstance(team_ids, int) else team_ids
+            all_ids = ",".join(str(x) for x in team_ids)
+            schedule_endpoint += f"teamId={all_ids}&"
+        if season_start_year:
+            schedule_endpoint += f"season={season_start_year}{season_start_year+1}&"
+        if game_type:
+            schedule_endpoint += f"gameType={game_type}&"
+        if date_range:
+            schedule_endpoint += f"startDate={game_type[0]}&endDate={date_range[1]}&"
+        response = self.get(schedule_endpoint)
+        all_dates = response.data.get("dates", [])
+        return [ScheduleDate.from_dict(date) for date in all_dates]
